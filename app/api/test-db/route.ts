@@ -1,9 +1,17 @@
-import clientPromise from "@/lib/mongoose";
+// app/api/test-db/route.ts
+import mongoose from "mongoose";
+import {connectToDB} from "@/lib/mongoose";
+
+// To test this route, send a GET request to /api/test-db
 
 export async function GET() {
   try {
-    const client = await clientPromise;
-    const db = client.db();
+    await connectToDB();
+
+    const db = mongoose.connection.db;
+    if (!db) {
+      return new Response("Database not initialized", {status: 500});
+    }
 
     const collections = await db.listCollections().toArray();
 
