@@ -47,10 +47,10 @@ export async function POST(req: Request) {
       );
     }
 
-    await connectDB();
+    await connectToDB();
 
     const tournament = await Tournament.create({
-      name,
+      metadata: {name},
       owner: session.user.id,
       players: [],
       rounds: [],

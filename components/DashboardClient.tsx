@@ -10,7 +10,9 @@ interface DashboardClientProps {
 
 interface Tournament {
   _id: string;
-  name: string;
+  metadata: {
+    name: string;
+  };
 }
 
 export default function DashboardClient({user}: DashboardClientProps) {
@@ -59,7 +61,7 @@ export default function DashboardClient({user}: DashboardClientProps) {
       <h2>Your Tournaments</h2>
       <ul>
         {tournaments.map((t: Tournament) => (
-          <li key={t._id}>{t.name}</li>
+          <li key={t._id}>{t.metadata.name}</li>
         ))}
       </ul>
     </div>

@@ -4,20 +4,16 @@ const tournamentSchema = new mongoose.Schema({
   metadata: {
     name: {
       type: String,
-      required: true,
       trim: true,
     },
     startDate: {
       type: Date,
-      required: true,
     },
     endDate: {
       type: Date,
-      required: true,
     },
     affiliateID: {
       type: String,
-      required: true,
       trim: true,
     },
     city: {
@@ -38,7 +34,6 @@ const tournamentSchema = new mongoose.Schema({
     },
     chiefTD: {
       type: String,
-      required: true,
       trim: true,
     },
     assistantChiefTD: {
@@ -50,7 +45,6 @@ const tournamentSchema = new mongoose.Schema({
     {
       USCF_id: {
         type: String,
-        required: true,
         trim: true,
       },
     },
