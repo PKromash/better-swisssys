@@ -6,18 +6,13 @@ import User from "@/lib/models/user.model";
 
 export const authOptions: AuthOptions = {
   session: {strategy: "jwt"},
+
   providers: [
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        email: {
-          label: "Email",
-          type: "email",
-        },
-        password: {
-          label: "Password",
-          type: "password",
-        },
+        email: {label: "Email", type: "email"},
+        password: {label: "Password", type: "password"},
       },
 
       async authorize(credentials) {
@@ -35,11 +30,29 @@ export const authOptions: AuthOptions = {
         if (!isValid) return null;
 
         return {
-          id: user._id.toString(),
+          id: user._id.toString(), // important!
           email: user.email,
           name: user.name,
         };
       },
     }),
   ],
+
+  callbacks: {
+    // Attach id to JWT when logging in
+    async jwt({token, user}) {
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
+
+    // Expose id on session.user
+    async session({session, token}) {
+      if (session.user) {
+        session.user.id = token.id as string;
+      }
+      return session;
+    },
+  },
 };

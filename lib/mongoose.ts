@@ -13,7 +13,9 @@ export const connectToDB = async () => {
   }
 
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
+    await mongoose.connect(process.env.MONGODB_URI, {
+      dbName: "better-swisssys",
+    });
     isConnected = true;
     console.log("Connected to DB");
   } catch (error) {

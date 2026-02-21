@@ -61,6 +61,11 @@ const tournamentSchema = new mongoose.Schema({
       ref: "Section",
     },
   ],
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
 });
 
 const Tournament =
