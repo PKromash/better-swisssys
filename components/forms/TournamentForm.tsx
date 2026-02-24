@@ -149,14 +149,14 @@ export default function TournamentForm({
               <Field label="Chief Tournament Director">
                 <input
                   {...register("metadata.chiefTD")}
-                  placeholder="Full name or USCF ID"
+                  placeholder="USCF ID"
                   className={inputCls}
                 />
               </Field>
               <Field label="Assistant Chief TD">
                 <input
                   {...register("metadata.assistantChiefTD")}
-                  placeholder="Full name or USCF ID"
+                  placeholder="USCF ID"
                   className={inputCls}
                 />
               </Field>
