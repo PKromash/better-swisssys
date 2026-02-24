@@ -3,7 +3,7 @@ import {getServerSession} from "next-auth";
 import {authOptions} from "@/lib/auth";
 import {connectToDB} from "@/lib/mongoose";
 import Tournament from "@/lib/models/tournament.model";
-
+import Section from "@/lib/models/section.model";
 // GET → Load all tournaments for logged-in user
 export async function GET() {
   try {
@@ -38,9 +38,9 @@ export async function POST(req: Request) {
       return NextResponse.json({error: "Unauthorized"}, {status: 401});
     }
 
-    const {name} = await req.json();
+    const {metadata, tournamentDirectors, sections} = await req.json();
 
-    if (!name) {
+    if (!metadata?.name) {
       return NextResponse.json(
         {error: "Tournament name required"},
         {status: 400},
@@ -49,11 +49,16 @@ export async function POST(req: Request) {
 
     await connectToDB();
 
+    // Create sections first to get their IDs
+    const sectionNames = await Section.insertMany(
+      (sections as {name: string}[]).map((s) => ({name: s.name})),
+    );
+
     const tournament = await Tournament.create({
-      metadata: {name},
+      metadata,
       owner: session.user.id,
-      players: [],
-      rounds: [],
+      tournamentDirectors: tournamentDirectors || [],
+      sections: sectionNames.map((s) => s._id),
     });
 
     return NextResponse.json(tournament);

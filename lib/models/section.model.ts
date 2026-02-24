@@ -8,7 +8,6 @@ const sectionSchema = new mongoose.Schema({
   },
   timeControl: {
     type: String,
-    required: true,
     trim: true,
   },
   sectionChiefTD: {
@@ -21,24 +20,19 @@ const sectionSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    required: true,
     trim: true,
   },
   numberRounds: {
     type: Number,
-    required: true,
   },
   players: {
     type: Number,
-    required: true,
   },
   beginningDate: {
     type: Date,
-    required: true,
   },
   endDate: {
     type: Date,
-    required: true,
   },
   sectionType: {
     type: String,

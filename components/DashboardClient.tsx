@@ -1,6 +1,7 @@
 "use client";
 
 import {useState, useEffect} from "react";
+import {createTournament} from "@/lib/actions/tournament.actions";
 
 interface DashboardClientProps {
   user?: {
@@ -18,25 +19,6 @@ interface Tournament {
 export default function DashboardClient({user}: DashboardClientProps) {
   const [name, setName] = useState("");
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
-
-  async function fetchTournaments() {
-    const res = await fetch("/api/tournaments");
-    const data = await res.json();
-    setTournaments(data);
-  }
-
-  async function createTournament() {
-    const res = await fetch("/api/tournaments", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({name}),
-    });
-
-    if (res.ok) {
-      setName("");
-      fetchTournaments();
-    }
-  }
 
   useEffect(() => {
     (async () => {
@@ -56,7 +38,21 @@ export default function DashboardClient({user}: DashboardClientProps) {
         value={name}
         onChange={(e) => setName(e.target.value)}
       />
-      <button onClick={createTournament}>Create</button>
+      <button
+        onClick={() => {
+          createTournament({metadata: {name}})
+            .then(() => {
+              setName("");
+            })
+            .then(() => {
+              return fetch("/api/tournaments");
+            })
+            .then((res) => res.json())
+            .then((data) => setTournaments(data))
+            .catch((err) => console.error(err));
+        }}>
+        Create
+      </button>
 
       <h2>Your Tournaments</h2>
       <ul>
