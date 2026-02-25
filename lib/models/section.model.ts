@@ -18,10 +18,6 @@ const sectionSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
-  type: {
-    type: String,
-    trim: true,
-  },
   numberRounds: {
     type: Number,
   },
