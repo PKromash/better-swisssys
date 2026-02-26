@@ -9,8 +9,6 @@ export async function GET(
   try {
     await connectToDB();
 
-    console.log("Fetching section with ID:", await context.params);
-
     const {id} = await context.params;
     const section = await Section.findById(id);
     if (!section) {
