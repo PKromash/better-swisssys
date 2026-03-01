@@ -4,13 +4,13 @@ import Section from "@/lib/models/section.model";
 
 export async function GET(
   req: Request,
-  context: {params: Promise<{id: string}>},
+  context: {params: Promise<{id: string; sectionId: string}>},
 ) {
   try {
     await connectToDB();
 
-    const {id} = await context.params;
-    const section = await Section.findById(id);
+    const {sectionId} = await context.params;
+    const section = await Section.findOne({tournament: sectionId});
     if (!section) {
       return NextResponse.json({error: "Section not found"}, {status: 404});
     }
@@ -23,15 +23,15 @@ export async function GET(
 
 export async function PATCH(
   req: Request,
-  context: {params: Promise<{id: string}>},
+  context: {params: Promise<{id: string; sectionId: string}>},
 ) {
   try {
     await connectToDB();
 
-    const {id} = await context.params;
+    const {sectionId} = await context.params;
     const updateData = await req.json();
 
-    const section = await Section.findByIdAndUpdate(id, updateData, {
+    const section = await Section.findByIdAndUpdate(sectionId, updateData, {
       new: true,
     });
 

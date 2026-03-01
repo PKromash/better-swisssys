@@ -16,14 +16,29 @@ const playerSchema = new mongoose.Schema({
     trim: true,
   },
   rating: {
-    type: Number,
+    // Number or unr
+    type: mongoose.Schema.Types.Mixed,
     required: true,
   },
   pairingNumber: {
     type: Number,
-    required: true,
+  },
+  byes: [
+    {
+      round: {
+        type: Number,
+        required: true,
+      },
+      points: {
+        type: Number,
+        required: true,
+      },
+    },
+  ],
+  withdrawn: {
+    type: Boolean,
+    default: false,
   },
 });
 
-const Player = mongoose.models.Player || mongoose.model("Player", playerSchema);
-export default Player;
+export default playerSchema;

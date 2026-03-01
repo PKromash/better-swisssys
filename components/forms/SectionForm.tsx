@@ -1,6 +1,5 @@
 "use client";
 
-import {useEffect} from "react";
 import {useForm} from "react-hook-form";
 import {Layers} from "lucide-react";
 
@@ -13,7 +12,6 @@ export interface SectionFormValues {
   sectionAssistantChiefTD: string;
   sectionType: 0 | 1 | 2 | 3;
   numberRounds: number;
-  players: number;
   beginningDate: string;
   endDate: string;
 }
@@ -32,18 +30,6 @@ const SECTION_TYPES = [
   {value: 2, label: "Double Round Robin"},
   {value: 3, label: "Match"},
 ];
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function calcRounds(sectionType: number, players: number): number | null {
-  if (sectionType === 1) return Math.max(0, players - 1);
-  if (sectionType === 2) return Math.max(0, 2 * (players - 1));
-  return null;
-}
-
-function isAutoCalculated(sectionType: number) {
-  return sectionType === 1 || sectionType === 2;
-}
 
 // ─── Shared styles ────────────────────────────────────────────────────────────
 
@@ -98,8 +84,6 @@ export default function SectionForm({
   const {
     register,
     handleSubmit,
-    watch,
-    setValue,
     formState: {isSubmitting},
   } = useForm<SectionFormValues>({
     defaultValues: {
@@ -109,24 +93,11 @@ export default function SectionForm({
       sectionAssistantChiefTD: "",
       sectionType: 0,
       numberRounds: 0,
-      players: 0,
       beginningDate: "",
       endDate: "",
       ...defaultValues,
     },
   });
-
-  const sectionType = Number(watch("sectionType")) as 0 | 1 | 2 | 3;
-  const players = Number(watch("players"));
-  const autoCalculated = isAutoCalculated(sectionType);
-
-  // Auto-calculate rounds when sectionType or players changes
-  useEffect(() => {
-    const rounds = calcRounds(sectionType, players);
-    if (rounds !== null) {
-      setValue("numberRounds", rounds);
-    }
-  }, [sectionType, players, setValue]);
 
   return (
     <div className="min-h-screen bg-zinc-950 px-4 py-12 text-zinc-100">
@@ -166,33 +137,6 @@ export default function SectionForm({
                 ))}
               </select>
             </Field>
-
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="Number of Players">
-                <input
-                  type="number"
-                  min={0}
-                  {...register("players", {valueAsNumber: true})}
-                  className={inputCls}
-                />
-              </Field>
-
-              <Field
-                label="Number of Rounds"
-                hint={
-                  autoCalculated
-                    ? "Auto-calculated from player count"
-                    : undefined
-                }>
-                <input
-                  type="number"
-                  min={0}
-                  {...register("numberRounds", {valueAsNumber: true})}
-                  disabled={autoCalculated}
-                  className={inputCls}
-                />
-              </Field>
-            </div>
 
             <Field label="Time Control" hint="e.g. G/90;d5 or 40/120:SD/30;d5">
               <input

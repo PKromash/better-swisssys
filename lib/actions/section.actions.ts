@@ -5,11 +5,14 @@ export async function configureSection(
   sectionId: string,
   data: SectionFormValues,
 ): Promise<void> {
-  const res = await fetch(`/api/sections/${sectionId}`, {
-    method: "PATCH",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify(data),
-  });
+  const res = await fetch(
+    `/api/tournaments/${tournamentId}/sections/${sectionId}`,
+    {
+      method: "PATCH",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(data),
+    },
+  );
 
   if (!res.ok) {
     throw new Error("Failed to configure section");

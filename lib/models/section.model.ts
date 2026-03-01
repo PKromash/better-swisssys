@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import playerSchema from "./player.model";
 
 const sectionSchema = new mongoose.Schema({
   name: {
@@ -22,7 +23,8 @@ const sectionSchema = new mongoose.Schema({
     type: Number,
   },
   players: {
-    type: Number,
+    type: [playerSchema],
+    default: [],
   },
   beginningDate: {
     type: Date,
@@ -31,8 +33,8 @@ const sectionSchema = new mongoose.Schema({
     type: Date,
   },
   sectionType: {
-    type: String,
-    trim: true,
+    type: Number,
+    enum: [0, 1, 2, 3],
   },
   grandPrixStatus: {
     type: String,
