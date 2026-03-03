@@ -15,6 +15,7 @@ interface Section {
   _id: string;
   name: string;
   numberRounds: number;
+  currentRound: number;
   players: Player[];
 }
 
@@ -34,6 +35,7 @@ export default function PlayerList({tournamentId, sectionId}: PlayerListProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
+  const [addDefaults, setAddDefaults] = useState<Partial<PlayerFormValues>>({});
 
   // ── Data fetching ──────────────────────────────────────────────────────────
 
@@ -62,6 +64,21 @@ export default function PlayerList({tournamentId, sectionId}: PlayerListProps) {
   function openAdd() {
     setEditingPlayer(null);
     setModalMode("add");
+
+    // Pre-populate 0-point byes for any rounds already completed (late entry)
+    const missedRounds = section!.currentRound;
+    const points = 0;
+    if (missedRounds > 0) {
+      setAddDefaults({
+        byes: Array.from({length: missedRounds}, (_, i) => ({
+          round: i + 1,
+          points: points as 0,
+        })),
+      });
+    } else {
+      setAddDefaults({});
+    }
+
     setModalOpen(true);
   }
 
@@ -125,7 +142,6 @@ export default function PlayerList({tournamentId, sectionId}: PlayerListProps) {
       </div>
     );
   }
-  console.log(section);
 
   const players = [...section.players].sort((a, b) => {
     // Sort by rating descending; "unr" goes to the bottom
@@ -186,13 +202,13 @@ export default function PlayerList({tournamentId, sectionId}: PlayerListProps) {
                     Name
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                    Rating
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-zinc-500">
                     USCF ID
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-zinc-500">
                     State
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                    Rating
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-zinc-500">
                     Byes
@@ -214,14 +230,14 @@ export default function PlayerList({tournamentId, sectionId}: PlayerListProps) {
                     <td className="px-4 py-3 font-medium text-zinc-100">
                       {player.name}
                     </td>
-                    <td className="px-4 py-3 text-zinc-300">
-                      {player.rating || "—"}
-                    </td>
                     <td className="px-4 py-3 text-zinc-400">
                       {player.USCF_id}
                     </td>
                     <td className="px-4 py-3 text-zinc-400">
                       {player.state || "—"}
+                    </td>
+                    <td className="px-4 py-3 text-zinc-300">
+                      {player.rating || "—"}
                     </td>
                     <td className="px-4 py-3 text-zinc-400">
                       {player.byes.length > 0
@@ -267,7 +283,9 @@ export default function PlayerList({tournamentId, sectionId}: PlayerListProps) {
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         onSubmit={modalMode === "add" ? handleAddPlayer : handleEditPlayer}
-        defaultValues={editingPlayer ?? undefined}
+        defaultValues={
+          modalMode === "add" ? addDefaults : (editingPlayer ?? undefined)
+        }
         numberRounds={section.numberRounds ?? 0}
         mode={modalMode}
       />
