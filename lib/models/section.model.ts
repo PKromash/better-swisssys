@@ -22,6 +22,11 @@ const sectionSchema = new mongoose.Schema({
   numberRounds: {
     type: Number,
   },
+  // round through which pairings have been generated (0 if pairings have not yet been generated for the first round)
+  currentRound: {
+    type: Number,
+    default: 0,
+  },
   players: {
     type: [playerSchema],
     default: [],
