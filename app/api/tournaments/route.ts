@@ -61,7 +61,10 @@ export async function POST(req: Request) {
       sections: sectionNames.map((s) => s._id),
     });
 
-    return NextResponse.json(tournament);
+    return NextResponse.json({
+      ...tournament.toObject(),
+      _id: tournament._id.toString(),
+    });
   } catch (error) {
     console.error(error);
     return NextResponse.json(

@@ -1,6 +1,10 @@
-const page = async ({params}: {params: Promise<{tournamentId: string}>}) => {
+import TournamentView from "@/components/TournamentView";
+
+interface PageProps {
+  params: Promise<{tournamentId: string}>;
+}
+
+export default async function TournamentPage({params}: PageProps) {
   const {tournamentId} = await params;
-  console.log("Tournament ID:", tournamentId);
-  return <div>{tournamentId}</div>;
-};
-export default page;
+  return <TournamentView tournamentId={tournamentId} />;
+}

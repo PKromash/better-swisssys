@@ -8,7 +8,7 @@ export async function fetchTournaments() {
 
 export async function createTournament(
   data: TournamentFormValues,
-): Promise<void> {
+): Promise<{_id: string}> {
   const res = await fetch("/api/tournaments", {
     method: "POST",
     headers: {"Content-Type": "application/json"},
@@ -18,4 +18,6 @@ export async function createTournament(
   if (!res.ok) {
     throw new Error("Failed to create tournament");
   }
+
+  return res.json();
 }

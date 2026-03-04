@@ -1,21 +1,28 @@
 import {NextResponse} from "next/server";
 import {connectToDB} from "@/lib/mongoose";
 import Tournament from "@/lib/models/tournament.model";
+import Section from "@/lib/models/section.model";
+
+void Section;
 
 export async function GET(
   req: Request,
-  context: {params: Promise<{id: string}>},
+  context: {params: Promise<{tournamentId: string}>},
 ) {
   try {
     await connectToDB();
 
-    const {id} = await context.params;
-    const tournament = await Tournament.findById(id);
+    const {tournamentId} = await context.params;
+    const tournament =
+      await Tournament.findById(tournamentId).populate("sections");
 
     if (!tournament) {
       return NextResponse.json({error: "Tournament not found"}, {status: 404});
     }
-    return NextResponse.json(tournament);
+    return NextResponse.json({
+      ...tournament.toObject(),
+      _id: tournament._id.toString(),
+    });
   } catch (error) {
     console.error(error);
     return NextResponse.json(

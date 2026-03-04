@@ -126,6 +126,15 @@ export default function SectionForm({
               />
             </Field>
 
+            <Field label="Number of Rounds">
+              <input
+                type="number"
+                {...register("numberRounds", {valueAsNumber: true})}
+                placeholder="0"
+                className={inputCls}
+              />
+            </Field>
+
             <Field label="Section Type">
               <select
                 {...register("sectionType", {valueAsNumber: true})}

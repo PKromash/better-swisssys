@@ -3,6 +3,7 @@
 import {useEffect, useState} from "react";
 import SectionForm, {SectionFormValues} from "./SectionForm";
 import {configureSection} from "@/lib/actions/section.actions";
+import {redirect} from "next/navigation";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -59,6 +60,9 @@ export default function ConfigureSectionForm({
 
   const handleSubmit = async (data: SectionFormValues) => {
     await configureSection(tournamentId, sectionId, data);
+    redirect(
+      `/dashboard/tournament/${tournamentId}/section/${sectionId}/players`,
+    );
   };
 
   if (loading) {
