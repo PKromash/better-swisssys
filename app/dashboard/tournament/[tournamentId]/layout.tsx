@@ -20,8 +20,6 @@ export default async function TournamentLayout({
     metadata: {name: string};
   }>();
 
-  console.log("Layout tournament:", tournament, "id:", tournamentId);
-
   if (!tournament) notFound();
 
   return (

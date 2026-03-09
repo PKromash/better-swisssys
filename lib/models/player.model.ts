@@ -12,7 +12,7 @@ const playerSchema = new mongoose.Schema({
   },
   USCF_id: {
     type: String,
-    required: true,
+    // required: true,
     trim: true,
   },
   rating: {

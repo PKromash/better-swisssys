@@ -38,7 +38,15 @@ export async function POST(req: Request) {
       return NextResponse.json({error: "Unauthorized"}, {status: 401});
     }
 
-    const {metadata, tournamentDirectors, sections} = await req.json();
+    const {metadata, tournamentDirectors, sections, sectionsWithPlayers} =
+      await req.json();
+
+    // console.log("Received tournament data:", {
+    //   metadata,
+    //   tournamentDirectors,
+    //   sections,
+    //   sectionsWithPlayers,
+    // });
 
     if (!metadata?.name) {
       return NextResponse.json(
@@ -49,16 +57,31 @@ export async function POST(req: Request) {
 
     await connectToDB();
 
-    // Create sections first to get their IDs
-    const sectionNames = await Section.insertMany(
-      (sections as {name: string}[]).map((s) => ({name: s.name})),
-    );
+    let sectionDocs;
+
+    if (sectionsWithPlayers?.length) {
+      // Import path: create sections with pre-populated players and sectionType
+      sectionDocs = await Section.insertMany(
+        sectionsWithPlayers.map(
+          (s: {name: string; sectionType: number; players: object[]}) => ({
+            name: s.name,
+            sectionType: s.sectionType,
+            players: s.players,
+          }),
+        ),
+      );
+    } else {
+      // Manual path: create stub sections with just a name
+      sectionDocs = await Section.insertMany(
+        (sections as {name: string}[]).map((s) => ({name: s.name})),
+      );
+    }
 
     const tournament = await Tournament.create({
       metadata,
       owner: session.user.id,
       tournamentDirectors: tournamentDirectors || [],
-      sections: sectionNames.map((s) => s._id),
+      sections: sectionDocs.map((s) => s._id),
     });
 
     return NextResponse.json({

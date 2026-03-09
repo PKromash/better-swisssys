@@ -34,18 +34,26 @@ export async function GET(
 
 export async function PATCH(
   req: Request,
-  context: {params: Promise<{id: string}>},
+  context: {params: Promise<{tournamentId: string}>},
 ) {
   try {
     await connectToDB();
 
-    const {id} = await context.params;
-    const updateData = await req.json();
+    const {tournamentId} = await context.params;
+    const {sections, ...updateData} = await req.json();
 
-    const tournament = await Tournament.findByIdAndUpdate(id, updateData, {
-      new: true,
-    });
+    console.log("Received update data:", tournamentId, updateData);
 
+    const tournament = await Tournament.findByIdAndUpdate(
+      tournamentId,
+      {
+        $set: {
+          metadata: updateData.metadata,
+          tournamentDirectors: updateData.tournamentDirectors,
+        },
+      },
+      {new: true},
+    );
     if (!tournament) {
       return NextResponse.json({error: "Tournament not found"}, {status: 404});
     }
