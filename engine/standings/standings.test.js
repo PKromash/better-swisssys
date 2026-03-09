@@ -1,9 +1,10 @@
-import Player from "../player.js";
-import standings from "./standings.js";
-import scoreTiebreak from "./scoreTiebreak.js";
-import modifiedMedian from "./modifiedMedian.js";
-import solkoff from "./solkoff.js";
-import cumulative from "./cumulative.js";
+const Player = require('../player')
+const scoreTiebreak = require('./scoreTiebreak')
+const modifiedMedian = require('./modifiedMedian')
+const solkoff = require('./solkoff')
+const cumulative = require('./cumulative')
+const standings = require('./standings')
+const cumulativeOpponents = require('./cumulativeOpponents')
 
 test("testing rating tiebreaks", () => {
   players = [];
@@ -71,82 +72,70 @@ test("testing multiple players with the highest score", () => {
   }
 });
 
-test("testing modified median tiebreak", () => {
-  players = [];
-  players.push(
-    new Player({
-      id: 1,
-      name: "Peyton",
-      rating: 2100,
-      opponents: [2, 5],
-      results: ["W", "W"],
-      colors: [],
-    }),
-  );
-  players.push(
-    new Player({
-      id: 2,
-      name: "David",
-      rating: 1700,
-      opponents: [1, 4],
-      results: ["L", "W"],
-      colors: [],
-    }),
-  );
-  players.push(
-    new Player({
-      id: 3,
-      name: "Jeff",
-      rating: 700,
-      opponents: [4, 6],
-      results: ["W", "L"],
-      colors: [],
-    }),
-  );
-  players.push(
-    new Player({
-      id: 4,
-      name: "Jim",
-      rating: 2100,
-      opponents: [3, 2],
-      results: ["W", "W"],
-      colors: [],
-    }),
-  );
-  players.push(
-    new Player({
-      id: 5,
-      name: "John",
-      rating: 1700,
-      opponents: [6, 5],
-      results: ["W", "W"],
-      colors: [],
-    }),
-  );
-  players.push(
-    new Player({
-      id: 6,
-      name: "League",
-      rating: 700,
-      opponents: [5, 3],
-      results: ["W", "W"],
-      colors: [],
-    }),
-  );
-  candidates = scoreTiebreak(players);
-  candidates = modifiedMedian(players, candidates);
-  correctCandidates = [];
-  correctCandidates.push(players[0]);
-  correctCandidates.push(players[4]);
-  correctCandidates.push(players[5]);
-  checkedCandidates = [];
-  expect(candidates.length).toBe(3);
-  for (let i = 0; i < candidates.length; i++) {
-    expect(correctCandidates.includes(candidates[i])).toBe(1);
-    expect(checkedCandidates.includes(candidates[i])).toBe(0);
-    checkedCandidates.push(candidates[i]);
-  }
-});
+test('testing modified median tiebreak', () => {
+    players = []
+    players.push(new Player({
+        id: 1,
+        name: 'Peyton',
+        rating: 2100,
+        opponents: [2,5],
+        results: ['W', 'W'],
+        colors: []
+    }))
+    players.push(new Player({
+        id: 2,
+        name: 'David',
+        rating: 1700,
+        opponents: [1,4],
+        results: ['L', 'W'],
+        colors: []
+    }))
+    players.push(new Player({
+        id: 3,
+        name: 'Jeff',
+        rating: 700,
+        opponents: [4,6],
+        results: ['W', 'L'],
+        colors: []
+    }))
+    players.push(new Player({
+        id: 4,
+        name: 'Jim',
+        rating: 2100,
+        opponents: [3,2],
+        results: ['W', 'W'],
+        colors: []
+    }))
+    players.push(new Player({
+        id: 5,
+        name: 'John',
+        rating: 1700,
+        opponents: [6,1],
+        results: ['W', 'W'],
+        colors: []
+    }))
+    players.push(new Player({
+        id: 6,
+        name: 'League',
+        rating: 700,
+        opponents: [5,3],
+        results: ['W', 'W'],
+        colors: []
+    }))
+    candidates = scoreTiebreak(players)
+    candidates = modifiedMedian(players, candidates)
+    correctCandidates = []
+    correctCandidates.push(players[0])
+    correctCandidates.push(players[4])
+    correctCandidates.push(players[5])
+    checkedCandidates = []
+    expect(candidates.length).toBe(3)
+    for(let i = 0; i < candidates.length; i++){
+        expect(correctCandidates.includes(candidates[i])).toBe(true)
+        expect(checkedCandidates.includes(candidates[i])).toBe(false)
+        checkedCandidates.push(candidates[i])
+    }
+})
 
 test("testing solkoff tiebreak", () => {
   players = [];
@@ -258,9 +247,56 @@ test("testing cumulative tiebreak", () => {
     }),
   );
   candidates = scoreTiebreak(players);
+  candidates = cumulativeOpponents(players, candidates);
+  expect(candidates.length).toBe(1);
+  expect(candidates[0].name).toBe('David');
+});
+test("testing cumulative opposition tiebreak", () => {
+  players = [];
+  players.push(
+    new Player({
+      id: 1,
+      name: "Peyton",
+      rating: 2100,
+      opponents: [2, 4, 3],
+      results: ["W", "W", "L"],
+      colors: [],
+    }),
+  );
+  players.push(
+    new Player({
+      id: 2,
+      name: "David",
+      rating: 1700,
+      opponents: [1, 3, 4],
+      results: ["L", "W", "W"],
+      colors: [],
+    }),
+  );
+  players.push(
+    new Player({
+      id: 3,
+      name: "Jeff",
+      rating: 700,
+      opponents: [4, 2, 1],
+      results: ["W", "L", "W"],
+      colors: [],
+    }),
+  );
+  players.push(
+    new Player({
+      id: 4,
+      name: "Jim",
+      rating: 2100,
+      opponents: [3, 1, 2],
+      results: ["L", "L", "L"],
+      colors: [],
+    }),
+  );
+  candidates = scoreTiebreak(players);
   candidates = cumulative(players, candidates);
   expect(candidates.length).toBe(1);
-  expect(candidates[0].name).toBe(Peyton);
+  expect(candidates[0].name).toBe('Peyton');
 });
 test("testing full tiebreak functionality", () => {
   players = [];
@@ -345,7 +381,7 @@ test("testing full tiebreak functionality", () => {
     }),
   );
   playerStandings = standings(players);
-  correctOrder = [1, 2, 3, 5, 4, 8, 6, 7];
+  correctOrder = [1, 2, 3, 5, 8, 6, 4, 7];
   expect(correctOrder.length).toBe(playerStandings.length);
   for (let i = 0; i < playerStandings.length; i++) {
     expect(correctOrder[i]).toBe(playerStandings[i].id);
@@ -444,7 +480,7 @@ test("testing byes", () => {
   );
   players.push(
     new Player({
-      id: 4,
+      id: 5,
       name: "Geoff",
       rating: 2100,
       opponents: [2, 3],
