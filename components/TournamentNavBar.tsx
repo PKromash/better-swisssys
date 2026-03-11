@@ -1,21 +1,20 @@
 "use client";
 
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import {useRouter, usePathname} from "next/navigation";
-import {ChevronLeft, Trophy, Layers} from "lucide-react";
+import {ChevronLeft, Trophy, Layers, ChevronDown, LogOut} from "lucide-react";
+import {signOut} from "next-auth/react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface TournamentNavbarProps {
   tournamentId: string;
   tournamentName: string;
+  userName: string;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-// Extracts sectionId from paths like:
-// /tournament/[tournamentId]/section/[sectionId]
-// /tournament/[tournamentId]/section/[sectionId]/players
 function extractSectionId(pathname: string): string | null {
   const match = pathname.match(/\/section\/([^/]+)/);
   return match ? match[1] : null;
@@ -26,12 +25,17 @@ function extractSectionId(pathname: string): string | null {
 export default function TournamentNavbar({
   tournamentId,
   tournamentName,
+  userName,
 }: TournamentNavbarProps) {
   const router = useRouter();
   const pathname = usePathname();
 
   const sectionId = extractSectionId(pathname);
   const [sectionName, setSectionName] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // ── Section name fetch ─────────────────────────────────────────────────────
 
   useEffect(() => {
     if (!sectionId) return;
@@ -55,9 +59,21 @@ export default function TournamentNavbar({
 
     return () => {
       cancelled = true;
-      setSectionName(null); // cleanup runs outside render, so this is safe
+      setSectionName(null);
     };
   }, [sectionId, tournamentId]);
+
+  // ── Close menu on outside click ────────────────────────────────────────────
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const isOnSectionPage = !!sectionId;
   const backTarget = isOnSectionPage
@@ -78,7 +94,7 @@ export default function TournamentNavbar({
         <div className="h-4 w-px bg-zinc-800" />
 
         {/* Breadcrumb */}
-        <div className="flex min-w-0 items-center gap-2 text-sm">
+        <div className="flex min-w-0 flex-1 items-center gap-2 text-sm">
           <Trophy className="h-3.5 w-3.5 shrink-0 text-amber-400" />
           <button
             onClick={() => router.push(`/dashboard/tournament/${tournamentId}`)}
@@ -98,6 +114,29 @@ export default function TournamentNavbar({
                 {sectionName ?? "…"}
               </span>
             </>
+          )}
+        </div>
+
+        {/* User menu */}
+        <div className="relative shrink-0" ref={menuRef}>
+          <button
+            onClick={() => setMenuOpen((prev) => !prev)}
+            className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs text-zinc-400 transition hover:bg-zinc-800 hover:text-zinc-200">
+            <span className="max-w-[120px] truncate">{userName}</span>
+            <ChevronDown
+              className={`h-3.5 w-3.5 transition-transform ${menuOpen ? "rotate-180" : ""}`}
+            />
+          </button>
+
+          {menuOpen && (
+            <div className="absolute right-0 top-full mt-1 w-40 rounded-lg border border-zinc-700 bg-zinc-900 py-1 shadow-xl">
+              <button
+                onClick={() => signOut({callbackUrl: "/auth/signin"})}
+                className="flex w-full items-center gap-2 px-3 py-2 text-xs text-zinc-400 transition hover:bg-zinc-800 hover:text-red-400">
+                <LogOut className="h-3.5 w-3.5" />
+                Sign out
+              </button>
+            </div>
           )}
         </div>
       </div>

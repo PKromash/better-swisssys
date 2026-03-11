@@ -1,29 +1,45 @@
 import {getServerSession} from "next-auth";
-import {redirect} from "next/navigation";
 import {authOptions} from "@/lib/auth";
-import DashboardClient from "@/components/DashboardClient";
+import {redirect} from "next/navigation";
+import {connectToDB} from "@/lib/mongoose";
+import Tournament from "@/lib/models/tournament.model";
+import Section from "@/lib/models/section.model";
+import DashboardView from "@/components/DashboardView";
+
+interface SectionDoc {
+  _id: string;
+  name: string;
+  players: {_id: string}[];
+}
+
+interface TournamentDoc {
+  _id: string;
+  metadata: {
+    name: string;
+    startDate: string;
+    endDate: string;
+  };
+  sections: SectionDoc[];
+}
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
+  if (!session?.user) redirect("/auth/signin");
 
-  // console.log("Session:", session);
+  await connectToDB();
+  void Section;
 
-  if (!session) {
-    redirect("/auth/signin");
-  }
+  const tournaments = await Tournament.find({owner: session.user.id})
+    .populate("sections")
+    .sort({createdAt: -1})
+    .lean<TournamentDoc[]>();
+
+  const serialized = JSON.parse(JSON.stringify(tournaments));
 
   return (
-    <div>
-      <h1>Dashboard</h1>
-      <p>Welcome, {session.user?.name}</p>
-
-      <form action="/api/auth/signout" method="post">
-        <button type="submit">Sign Out</button>
-      </form>
-
-      <DashboardClient
-        user={session.user ? {name: session.user.name ?? undefined} : undefined}
-      />
-    </div>
+    <DashboardView
+      tournaments={serialized}
+      userName={session.user.name ?? "Unknown"}
+    />
   );
 }
