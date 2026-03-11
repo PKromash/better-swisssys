@@ -1,13 +1,16 @@
 /*
-    Implementss the cumulative scoring tiebreak, where earlier wins are weighted more
+    Implementss the cumulative opposition scoring tiebreak, where opponents cumulative scores are summed
     takes in a list of all players, and a list of current candidates for the next standing, 
     and returns a list of candidates with the beset cumulative score.
 */
-function cumulative(players, candidates){
+function cumulativeOpponents(players, candidates){
     newCandidates = []
     maxCumScore = 0
     for(let i = 0; i < candidates.length; i++){
-        currCumScore = candidates[i].cumScore
+        currCumScore = 0
+        for(let j = 0; j < candidates[i].opponents.length; j++){
+            currCumScore += players.find(player => player.id === candidates[i].opponents[j]).cumScore
+        }
         if(currCumScore > maxCumScore){
             maxCumScore = currCumScore
             newCandidates.length = 0
@@ -19,4 +22,4 @@ function cumulative(players, candidates){
     }
     return newCandidates
 }
-module.exports = cumulative
+module.exports = cumulativeOpponents

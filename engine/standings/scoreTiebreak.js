@@ -1,3 +1,6 @@
+/*
+    scoreTiebreak takes in the list of all players, and returns the subset of that list with the highest score
+*/
 function scoreTiebreak(players){
     candidates = []
     score = 0

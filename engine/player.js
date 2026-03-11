@@ -13,6 +13,7 @@ class Player {
         this.colors = data.colors || []
         this.score = this.computeScore()
         this.hadBye = this.hadBye()
+        this.cumScore = this.computeCumScore()
     }
 
     computeScore(){
@@ -40,6 +41,19 @@ class Player {
     get colorBalance() {
         return this.colors.filter(c => c === 'W').length -
                this.colors.filter(c => c === 'B').length
+    }
+
+    computeCumScore(){
+        sum = 0
+        for(let i = 0; i < this.results.length; i++){
+            if (["W", "FW", "FB"].includes(this.results[i])){
+                sum += 1 * (this.results.length - i)
+            }
+            else if(["D", "FD", "HB"].includes(this.results[i])){
+                sum += 0.5 * (this.results.length - i)
+            }
+        }
+        return sum
     }
 
 }

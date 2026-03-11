@@ -1,4 +1,40 @@
+//calculates the list of candidates that have the highest modified Median
+//parameters: players - the total list of players
+//            candidates - the subset of players that are currently tied
+//returns: a list of candidates with the highest modified median
 function modifiedMedian(players, candidates){
-    return candidates
+    newCandidates = []
+    rounds = candidates[0].results.length
+    topScore = 0
+    for(let i = 0; i < candidates.length; i++){
+        opponents = candidates[i].opponents
+        score = candidates[i].score
+        opponentScore = []
+        currScore = 0
+        for(let j = 0; j < opponents.length; j++){
+            opponentScore.push(players.find((player) => player.id === opponents[j]).score)
+        }
+        opponentScore = opponentScore.sort((a, b) => (a - b))
+        if(opponentScore.length >= 1 || (rounds/2 === score && opponentScore.length >= 2)){
+            if(rounds/2 <= score){
+                opponentScore = opponentScore.slice(1)
+            }
+            if(rounds/2 >= score){
+                opponentScore = opponentScore.slice(0, opponentScore.length - 1)
+            }
+            for(let j = 0; j < opponentScore.length; j++){
+                currScore += opponentScore[j]
+            }
+        }
+        if(currScore > topScore){
+            topScore = currScore
+            newCandidates.length = 0
+            newCandidates.push(candidates[i])
+        }
+        else if(currScore === topScore){
+            newCandidates.push(candidates[i])
+        }
+    }
+    return newCandidates
 }
 module.exports = modifiedMedian
