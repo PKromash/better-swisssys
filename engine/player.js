@@ -2,7 +2,8 @@
 //The results array should be populated with the following:
 // W: Win, D: Draw, L: Loss, FW: Forefit Win, FD: Forefit Draw
 // FL: Forefit Loss, HB: Half-Point Bye, FB: Full-Point Bye
-
+// In the case that any game had a result that is not a win, loss, or draw, its equivalent
+// color should be denoted as X
 class Player {
     constructor(data) {
         this.id = data.id

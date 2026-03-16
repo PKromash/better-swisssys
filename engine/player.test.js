@@ -1,4 +1,4 @@
-import Player from "./player";
+const Player = require('./player')
 
 test("test creating a sample player", () => {
   const samplePlayer = new Player({
