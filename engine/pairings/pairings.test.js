@@ -305,6 +305,7 @@ test('complex pairing', () =>{
     correctPairings = []
     correctPairings.push([players[2], players[0]])
     correctPairings.push([players[3], players[1]])
+    //Edit: David gets white against Jhin
     correctPairings.push([players[4], players[7]])
     correctPairings.push([players[6], players[5]])
     expect(correctPairings.length).toBe(4)
@@ -551,7 +552,8 @@ test('downfloat with multiple scores', () => {
     correctPairings = []
     correctPairings.push([players[0], players[4]])
     correctPairings.push([players[1], players[2]])
-    correctPairings.push([players[3], players[6]])
+    //Edit: line was incorrectly "players[3], players[6]"
+    correctPairings.push([players[3], players[5]])
     correctPairings.push([players[7], players[9]])
     correctPairings.push([players[6], players[8]])
     expect(pairings.length).toBe(5)
@@ -709,8 +711,9 @@ test('16 player pairing pt. 1', () => {
     correctPairings = []
     correctPairings.push([players[14], players[0]])
     correctPairings.push([players[1], players[13]])
-    correctPairings.push([players[12], players[2]])
+    //Edit: swapped below two lines
     correctPairings.push([players[3], players[15]])
+    correctPairings.push([players[12], players[2]])
     correctPairings.push([players[10], players[4]])
     correctPairings.push([players[5], players[9]])
     correctPairings.push([players[8], players[6]])
@@ -876,6 +879,17 @@ test('16 player pairing pt. 2', () =>{
     correctPairings.push([players[7], players[14]])
     correctPairings.push([players[9], players[15]])
     correctPairings.push([players[11], players[12]])
+    /* 
+        Edit: pairings should be
+        0,1
+        2,3
+        4,13
+        10,5
+        6,15
+        7,14
+        11,12
+        9,8
+    */
     expect(pairings.length).toBe(8)
     for(let i = 0; i < correctPairings.length; i++){
         expect(pairings[i]).toBe(correctPairings[i])
