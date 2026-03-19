@@ -884,11 +884,11 @@ test('16 player pairing pt. 2', () =>{
         0,1
         2,3
         4,13
-        10,5
-        6,15
-        7,14
-        11,12
-        9,8
+        6,10
+        9,14
+        15,11
+        12,7
+        8,5
     */
     expect(pairings.length).toBe(8)
     for(let i = 0; i < correctPairings.length; i++){
