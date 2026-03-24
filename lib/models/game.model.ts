@@ -1,14 +1,13 @@
 import mongoose from "mongoose";
+import playerSchema from "./player.model";
 
 const gameSchema = new mongoose.Schema({
   whitePlayer: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Player",
+    type: playerSchema,
     required: true,
   },
   blackPlayer: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Player",
+    type: playerSchema,
     required: true,
   },
   result: {

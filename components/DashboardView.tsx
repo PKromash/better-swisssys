@@ -103,7 +103,7 @@ export default function DashboardView({
           <div className="flex items-center gap-2">
             <Trophy className="h-4 w-4 text-amber-400" />
             <span className="text-sm font-semibold text-zinc-100">
-              SwissSys
+              Better SwissSys
             </span>
           </div>
 
@@ -140,7 +140,7 @@ export default function DashboardView({
             My Tournaments
           </h1>
           <button
-            onClick={() => router.push("/dashboard/tournament/create")}
+            onClick={() => router.push("/dashboard/create-tournament")}
             className="flex items-center gap-2 rounded-md bg-amber-500 px-4 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-amber-400">
             <Plus className="h-4 w-4" />
             New Tournament
