@@ -2,8 +2,8 @@
     scoreTiebreak takes in the list of all players, and returns the subset of that list with the highest score
 */
 function scoreTiebreak(players){
-    candidates = []
-    score = 0
+    let candidates = []
+    let score = 0
     for(let i = 0; i < players.length; i++){
         if(players[i].score > score){
             candidates.length = 0

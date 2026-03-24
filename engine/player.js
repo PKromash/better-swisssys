@@ -13,12 +13,12 @@ class Player {
         this.results = data.results || []
         this.colors = data.colors || []
         this.score = this.computeScore()
-        this.hadBye = this.hadBye()
+        this.hadBye = this.computeBye()
         this.cumScore = this.computeCumScore()
     }
 
     computeScore(){
-        sum = 0
+        let sum = 0
         for(let i = 0; i < this.results.length; i++){
             if (["W", "FW", "FB"].includes(this.results[i])){
                 sum += 1
@@ -30,7 +30,7 @@ class Player {
         return sum
     }
 
-    hadBye(){
+    computeBye(){
         for(let i = 0; i < this.results.length; i++){
             if(this.results[i] === "FB"){
                 return 1
@@ -45,7 +45,7 @@ class Player {
     }
 
     computeCumScore(){
-        sum = 0
+        let sum = 0
         for(let i = 0; i < this.results.length; i++){
             if (["W", "FW", "FB"].includes(this.results[i])){
                 sum += 1 * (this.results.length - i)
@@ -56,7 +56,24 @@ class Player {
         }
         return sum
     }
-
+    // returns true if player has gotten a forefit win, returns false otherwise
+    get prevFW(){
+        for(result of this.results){
+            if (result === "FW"){
+                return true
+            }
+        }
+        return false
+    }
+    // returns true if player has taken a half point bye, returns false otherwise
+    get prevHB(){
+        for(result of this.results){
+            if (result === "HB"){
+                return true
+            }
+        }
+        return false
+    }
 }
 
 module.exports = Player

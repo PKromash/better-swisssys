@@ -384,7 +384,7 @@ test("testing full tiebreak functionality", () => {
   correctOrder = [1, 2, 3, 5, 8, 6, 4, 7];
   expect(correctOrder.length).toBe(playerStandings.length);
   for (let i = 0; i < playerStandings.length; i++) {
-    expect(correctOrder[i]).toBe(playerStandings[i].id);
+    expect(playerStandings[i].id).toBe(correctOrder[i]);
   }
 });
 test("testing draw tiebreaks", () => {
