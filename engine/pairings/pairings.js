@@ -1,6 +1,8 @@
 // const { error } = require("console")
 const Player = require("../player")
 
+// TODO: implement a way for pairings to be generated that accomadates requested byes
+
 function generatePairings(pl){
     let pairings = []
     let players = [...pl]
