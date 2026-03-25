@@ -15,7 +15,7 @@ const cumulativeOpponents = require('./cumulativeOpponents')
 */
 function calculateStandings(players) {
     let standings = []
-    let playersLeft = structuredClone(players)
+    let playersLeft = [...players]
     let currCandidates = []
     for(let i = 0; i < players.length; i++){
         currCandidates = scoreTiebreak(playersLeft)

@@ -4,7 +4,7 @@
 //returns: a list of candidates with the highest modified median
 function modifiedMedian(players, candidates){
     let newCandidates = []
-    let rounds = candidates[0].results.length
+    let rounds = candidates.length === 0 ? 0 : candidates[0].results.length
     let topScore = 0
     for(let i = 0; i < candidates.length; i++){
         let opponents = candidates[i].opponents
