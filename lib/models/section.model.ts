@@ -22,6 +22,29 @@ const sectionSchema = new mongoose.Schema({
   numberRounds: {
     type: Number,
   },
+  rounds: [
+    {
+      roundNumber: Number,
+      pairings: [
+        {
+          whitePlayer: {
+            type: playerSchema,
+            required: true,
+          },
+          blackPlayer: {
+            type: playerSchema,
+            required: true,
+          },
+          result: {
+            type: String,
+            enum: ["1-0", "0-1", "1/2-1/2", "1F-0F", "0F-1F", "0F-0F", "-"],
+            required: true,
+            default: "-", // "-" indicates a game that has not been played yet
+          },
+        },
+      ],
+    },
+  ],
   // round through which pairings have been generated (0 if pairings have not yet been generated for the first round)
   currentRound: {
     type: Number,
