@@ -28,11 +28,11 @@ const sectionSchema = new mongoose.Schema({
       pairings: [
         {
           whitePlayer: {
-            type: playerSchema,
+            type: Number, // pairing number of the white player
             required: true,
           },
           blackPlayer: {
-            type: playerSchema,
+            type: Number, // pairing number of the black player
             required: true,
           },
           result: {
