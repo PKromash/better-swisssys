@@ -1,6 +1,21 @@
 import mongoose from "mongoose";
 import playerSchema from "./player.model";
 
+const pairingSchema = new mongoose.Schema({
+  white: {type: Number, default: null},
+  black: {type: Number, default: null},
+  result: {
+    type: String,
+    enum: ["1-0", "0-1", "1/2-1/2", "1F-0F", "0F-1F", "0F-0F", "-"],
+    default: "-",
+  },
+});
+
+const roundSchema = new mongoose.Schema({
+  roundNumber: {type: Number, required: true},
+  pairings: {type: [pairingSchema], default: []},
+});
+
 const sectionSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -22,29 +37,7 @@ const sectionSchema = new mongoose.Schema({
   numberRounds: {
     type: Number,
   },
-  rounds: [
-    {
-      roundNumber: Number,
-      pairings: [
-        {
-          whitePlayer: {
-            type: Number, // pairing number of the white player
-            required: true,
-          },
-          blackPlayer: {
-            type: Number, // pairing number of the black player
-            required: true,
-          },
-          result: {
-            type: String,
-            enum: ["1-0", "0-1", "1/2-1/2", "1F-0F", "0F-1F", "0F-0F", "-"],
-            required: true,
-            default: "-", // "-" indicates a game that has not been played yet
-          },
-        },
-      ],
-    },
-  ],
+  rounds: {type: [roundSchema], default: []},
   // round through which pairings have been generated (0 if pairings have not yet been generated for the first round)
   currentRound: {
     type: Number,

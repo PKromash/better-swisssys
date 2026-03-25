@@ -1,4 +1,4 @@
-const { error } = require("console")
+// const { error } = require("console")
 const Player = require("../player")
 
 function generatePairings(pl){
