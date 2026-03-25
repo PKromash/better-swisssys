@@ -6,6 +6,17 @@ import Section from "@/lib/models/section.model";
 import generatePairings from "@/engine/pairings/pairings";
 import Player from "@/engine/player";
 
+interface byeDocument {
+  round: {
+    type: number;
+    required: true;
+  };
+  points: {
+    type: number;
+    required: true;
+  };
+}
+
 interface PlayerDocument {
   pairingNumber: number;
   name: string;
@@ -14,7 +25,22 @@ interface PlayerDocument {
   results: string[];
   colors: string[];
   withdrawn: boolean;
+  byes: byeDocument[];
 }
+
+// interface byeObject {
+//   round: number,
+//   points: number,
+// }
+
+// function requestedBye(byeArray: Array<byeObject>, currRound: number) {
+//   for (let i = 0; i < byeArray.length; ++i) {
+//     if (byeArray[i].round === currRound) {
+//       return true;
+//     }
+//   }
+//   return false;
+// }
 
 export async function POST(
   req: Request,
@@ -39,6 +65,12 @@ export async function POST(
     // Map DB players to engine Player objects
     const enginePlayers = section.players
       .filter((p: PlayerDocument) => !p.withdrawn)
+      .filter(
+        (p: PlayerDocument) =>
+          !p.byes.find(
+            (b: byeDocument) => b.round === section.currentRound + 1,
+          ),
+      )
       .map((p: PlayerDocument) => {
         const plain = {
           id: p.pairingNumber,
@@ -65,17 +97,27 @@ export async function POST(
     const roundPairings = (pairings as Array<[Player, Player | null]>).map(
       ([white, black]) => ({
         white: white?.id ?? null,
-        black: black?.id ?? null, // null = bye
-        result: "-",
+        black: black?.id ?? null, // null = didn't play
+        result: black ? "-" : "X",
       }),
     );
+    const requestedByes = section.players
+      .filter((p: PlayerDocument) => !p.withdrawn)
+      .filter((p: PlayerDocument) =>
+        p.byes.find((b: byeDocument) => b.round === roundNumber),
+      )
+      .map((p: PlayerDocument) => ({
+        white: p.pairingNumber,
+        black: null,
+        result: "B",
+      }));
+
+    roundPairings.push(...requestedByes);
 
     await Section.findByIdAndUpdate(sectionId, {
       $push: {rounds: {roundNumber, pairings: roundPairings}},
       $set: {currentRound: roundNumber},
     });
-    const saved = await Section.findById(sectionId).lean();
-    console.log("Saved rounds:", JSON.stringify(saved.rounds, null, 2));
 
     return NextResponse.json({roundNumber, pairings: roundPairings});
   } catch (error) {

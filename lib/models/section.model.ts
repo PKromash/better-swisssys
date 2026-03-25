@@ -6,7 +6,7 @@ const pairingSchema = new mongoose.Schema({
   black: {type: Number, default: null},
   result: {
     type: String,
-    enum: ["1-0", "0-1", "1/2-1/2", "1F-0F", "0F-1F", "0F-0F", "-"],
+    enum: ["1-0", "0-1", "1/2-1/2", "1F-0F", "0F-1F", "0F-0F", "X", "B", "-"],
     default: "-",
   },
 });

@@ -34,6 +34,8 @@ const RESULT_MAP: Record<
   "1F-0F": {white: "FW", black: "FL", whiteColor: "X", blackColor: "X"},
   "0F-1F": {white: "FL", black: "FW", whiteColor: "X", blackColor: "X"},
   "0F-0F": {white: "FL", black: "FL", whiteColor: "X", blackColor: "X"},
+  B: {white: "HB", black: "NA", whiteColor: "X", blackColor: "X"},
+  X: {white: "FB", black: "NA", whiteColor: "X", blackColor: "X"},
 };
 
 export async function PATCH(

@@ -45,8 +45,6 @@ export async function PATCH(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const {sections, ...updateData} = await req.json();
 
-    console.log("Received update data:", tournamentId, updateData);
-
     const tournament = await Tournament.findByIdAndUpdate(
       tournamentId,
       {
