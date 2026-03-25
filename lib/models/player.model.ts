@@ -23,6 +23,10 @@ const playerSchema = new mongoose.Schema({
   pairingNumber: {
     type: Number,
   },
+  // A list of the pairing numbers of the opponents this player has faced in previous rounds in the order they played them
+  opponents: [Number],
+  results: [String], // W, L, D, B 
+  colors: [String], // W, B, or X for did not play
   byes: [
     {
       round: {
