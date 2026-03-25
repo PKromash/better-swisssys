@@ -3,14 +3,14 @@
 //            candidates - the subset of players that are currently tied
 //returns: a list of candidates with the highest modified median
 function modifiedMedian(players, candidates){
-    newCandidates = []
-    rounds = candidates[0].results.length
-    topScore = 0
+    let newCandidates = []
+    let rounds = candidates[0].results.length
+    let topScore = 0
     for(let i = 0; i < candidates.length; i++){
-        opponents = candidates[i].opponents
-        score = candidates[i].score
-        opponentScore = []
-        currScore = 0
+        let opponents = candidates[i].opponents
+        let score = candidates[i].score
+        let opponentScore = []
+        let currScore = 0
         for(let j = 0; j < opponents.length; j++){
             opponentScore.push(players.find((player) => player.id === opponents[j]).score)
         }

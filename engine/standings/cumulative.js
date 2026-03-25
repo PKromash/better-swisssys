@@ -1,13 +1,13 @@
 /*
-    Implementss the cumulative scoring tiebreak, where earlier wins are weighted more
+    Implements the cumulative scoring tiebreak, where earlier wins are weighted more
     takes in a list of all players, and a list of current candidates for the next standing, 
     and returns a list of candidates with the beset cumulative score.
 */
 function cumulative(players, candidates){
-    newCandidates = []
-    maxCumScore = 0
+    let newCandidates = []
+    let maxCumScore = 0
     for(let i = 0; i < candidates.length; i++){
-        currCumScore = candidates[i].cumScore
+        let currCumScore = candidates[i].cumScore
         if(currCumScore > maxCumScore){
             maxCumScore = currCumScore
             newCandidates.length = 0
