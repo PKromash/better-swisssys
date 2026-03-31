@@ -58,7 +58,7 @@ class Player {
     }
     // returns true if player has gotten a forefit win, returns false otherwise
     get prevFW(){
-        for(result of this.results){
+        for(let result of this.results){
             if (result === "FW"){
                 return true
             }
@@ -67,7 +67,7 @@ class Player {
     }
     // returns true if player has taken a half point bye, returns false otherwise
     get prevHB(){
-        for(result of this.results){
+        for(let result of this.results){
             if (result === "HB"){
                 return true
             }
