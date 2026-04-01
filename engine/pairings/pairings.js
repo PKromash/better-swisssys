@@ -47,29 +47,17 @@ function generatePairings(pl){
             remainingPlayers.forEach((p, index) => remainingPlayers[index] = p.filter(pl => pl.id !== bye.id))
         }
         pairings = calculatePairings(remainingPlayers)
-        const expectedPairings = Math.floor(players.length / 2)
-        console.log(`[pairings] players=${players.length} expected=${expectedPairings} got=${pairings.length} bye=${bye?.id ?? null}`)
-        if(pairings.length === expectedPairings){
+        if(pairings.length !== 0){
             if(bye !== null){
                 pairings.push([structuredClone(bye), null])
             }
             break
         }
-        // Even player count: no bye to reassign, no valid pairings possible
-        if(players.length % 2 === 0){
-            console.log('[pairings] even player count, incomplete pairings, giving up')
-            return []
-        }
     }
     remainingPlayers = structuredClone(players)
     while(remainingPlayers.length > 0){
-        const pairing = pairings.find(p => p.some(p1 => p1 && p1.id === remainingPlayers[0].id))
-        if(!pairing){
-            remainingPlayers = remainingPlayers.filter(p1 => p1.id !== remainingPlayers[0].id)
-            continue
-        }
-        sortedPairings.push(structuredClone(pairing))
-        sortedPairings.at(-1).forEach(p => { if(p) remainingPlayers = remainingPlayers.filter(p1 => p1.id !== p.id) })
+        sortedPairings.push(structuredClone(pairings.find(p => p.some(p1 => p1.id === remainingPlayers[0].id))))
+        sortedPairings.at(-1).forEach(p => remainingPlayers = remainingPlayers.filter(p1 => p1.id !== p.id))
     }
     return sortedPairings
 }
@@ -121,42 +109,6 @@ function calculatePairings(sections){
         sectionPairings = setColors(sectionPairings, noPrioColor)
         sectionPairings.forEach(p => pairings.push(structuredClone(p)))
         remainingPlayers.forEach(p => floaters.push(structuredClone(p)))
-    }
-    // Try to pair remaining floaters with each other first
-    for(let i = 0; i < floaters.length - 1; i++){
-        for(let j = i + 1; j < floaters.length; j++){
-            if(validatePairing([floaters[i], floaters[j]])){
-                const pair = setColors([structuredClone([floaters[i], floaters[j]])], 0, true)[0]
-                pairings.push(pair)
-                floaters.splice(j, 1)
-                floaters.splice(i, 1)
-                i--
-                break
-            }
-        }
-    }
-    // For any still-unresolved floaters, try swapping one into an existing pairing
-    // so the displaced player pairs with another floater
-    for(let fi = 0; fi < floaters.length; fi++){
-        for(let fj = fi + 1; fj < floaters.length; fj++){
-            let resolved = false
-            for(let p = 0; p < pairings.length && !resolved; p++){
-                for(let slot = 0; slot <= 1 && !resolved; slot++){
-                    const testPairing = structuredClone(pairings[p])
-                    const displaced = structuredClone(testPairing[slot])
-                    testPairing[slot] = structuredClone(floaters[fi])
-                    const displacedPair = [displaced, structuredClone(floaters[fj])]
-                    if(validatePairing(testPairing) && validatePairing(displacedPair)){
-                        pairings[p] = setColors([testPairing], 0, true)[0]
-                        pairings.push(setColors([displacedPair], 0, true)[0])
-                        floaters.splice(fj, 1)
-                        floaters.splice(fi, 1)
-                        resolved = true
-                        fi--
-                    }
-                }
-            }
-        }
     }
     return pairings
 }
@@ -344,22 +296,10 @@ function setColors(pairs, noPrioColor, isFloater = false){
                         return a.score - b.score || aRating - bRating
                         })[1]
                     let otherPlayer = pairings[i].find(p => p.id !== priorityPlayer.id)
-                    noPrioColor = 1 - noPrioColor;
                     newPairing = createPairing(priorityPlayer, otherPlayer, noPrioColor)
                     pairings[i] = structuredClone(newPairing)
                     continue
-                } else {
-        // ADD THIS BLOCK: Handle first round (no color history)
-        let priorityPlayer = [...pairings[i]].sort((a, b) => {
-            const aRating = a.rating === 'unr' ? 0 : a.rating
-            const bRating = b.rating === 'unr' ? 0 : b.rating
-            return a.score - b.score || aRating - bRating
-            })[1]
-        let otherPlayer = pairings[i].find(p => p.id !== priorityPlayer.id)
-        newPairing = createPairing(priorityPlayer, otherPlayer, noPrioColor)
-        noPrioColor = 1 - noPrioColor  // flip for next pairing
-        pairings[i] = structuredClone(newPairing)
-    }
+                }
 
             }
         }
@@ -392,10 +332,10 @@ function calculateDisparity(player1, player2, section){
     let filteredSection = section.filter(p => p.id !== player1.id && p.id !== player2.id)
     let p1DisparityList = []
     let p2DisparityList = []
-    for(const player of filteredSection){
+    for(player of filteredSection){
         p1DisparityList.push([player, Math.abs(player.rating - player1.rating)])
     }
-    for(const player of filteredSection){
+    for(player of filteredSection){
         p2DisparityList.push([player, Math.abs(player.rating - player2.rating)])
     }
     

@@ -11,12 +11,7 @@ interface PlayerDocument {
   opponents: number[];
   results: string[];
   colors: string[];
-  byes: string[];
   withdrawn: boolean;
-}
-
-interface Pairing {
-  result: string;
 }
 
 export async function GET(
@@ -39,18 +34,6 @@ export async function GET(
       );
     }
 
-    console.log("Current round pairings:", section.currentRound.pairings);
-    const allResultsEntered = section.currentRound.pairings.every(
-      (pairing: Pairing) => pairing.result !== "-",
-    );
-
-    if (!allResultsEntered) {
-      return NextResponse.json(
-        {error: "Not all results for the current round have been entered"},
-        {status: 400},
-      );
-    }
-
     const enginePlayers = section.players
       .filter((p: PlayerDocument) => !p.withdrawn)
       .map(
@@ -62,7 +45,6 @@ export async function GET(
             opponents: p.opponents,
             results: p.results,
             colors: p.colors,
-            byes: p.byes,
           }),
       );
 

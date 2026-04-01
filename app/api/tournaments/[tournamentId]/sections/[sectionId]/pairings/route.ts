@@ -6,12 +6,6 @@ import Section from "@/lib/models/section.model";
 import generatePairings from "@/engine/pairings/pairings";
 import Player from "@/engine/player";
 
-const RESULT_MAP: Record<string, {white: string; whiteColor: string}> = {
-  B: {white: "HB", whiteColor: "X"},
-  X: {white: "FB", whiteColor: "X"},
-  "-": {white: "-", whiteColor: "W"},
-};
-
 interface byeDocument {
   round: {
     type: number;
@@ -33,6 +27,20 @@ interface PlayerDocument {
   withdrawn: boolean;
   byes: byeDocument[];
 }
+
+// interface byeObject {
+//   round: number,
+//   points: number,
+// }
+
+// function requestedBye(byeArray: Array<byeObject>, currRound: number) {
+//   for (let i = 0; i < byeArray.length; ++i) {
+//     if (byeArray[i].round === currRound) {
+//       return true;
+//     }
+//   }
+//   return false;
+// }
 
 export async function POST(
   req: Request,
@@ -106,30 +114,10 @@ export async function POST(
 
     roundPairings.push(...requestedByes);
 
-    // Update players with bye results
-    roundPairings.forEach((pairing) => {
-      if (pairing.black === null) {
-        const whitePlayer = section.players.find(
-          (p: PlayerDocument) => p.pairingNumber === pairing.white,
-        );
-
-        if (whitePlayer) {
-          const resultMapping = RESULT_MAP[pairing.result];
-          whitePlayer.results.push(resultMapping.white); // "FB" or "HB"
-          whitePlayer.colors.push(resultMapping.whiteColor); // "X"
-          whitePlayer.opponents.push(0); // Bye opponent
-        }
-      }
+    await Section.findByIdAndUpdate(sectionId, {
+      $push: {rounds: {roundNumber, pairings: roundPairings}},
+      $set: {currentRound: roundNumber},
     });
-
-    // Update section object directly
-    section.rounds.push({roundNumber, pairings: roundPairings});
-    section.currentRound = roundNumber;
-    section.markModified("players");
-    section.markModified("rounds");
-
-    // Single save
-    await section.save();
 
     return NextResponse.json({roundNumber, pairings: roundPairings});
   } catch (error) {

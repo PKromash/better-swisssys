@@ -11,23 +11,9 @@ import {
   Trash2,
   AlertTriangle,
   ChevronRight,
-  Swords,
-  Medal,
-  Loader2,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-interface Pairing {
-  white: number;
-  black: number | null;
-  result: string;
-}
-
-interface Round {
-  roundNumber: number;
-  pairings: Pairing[];
-}
 
 interface Section {
   _id: string;
@@ -36,7 +22,6 @@ interface Section {
   currentRound: number;
   sectionType: 0 | 1 | 2 | 3;
   players: {_id: string}[];
-  rounds: Round[];
 }
 
 interface Tournament {
@@ -75,23 +60,6 @@ function isConfigured(section: Section) {
   return section.numberRounds > 0;
 }
 
-function allResultsEntered(section: Section): boolean {
-  if (section.currentRound === 0) return true;
-  const currentRound = section.rounds?.find(
-    (r) => r.roundNumber === section.currentRound,
-  );
-  if (!currentRound) return false;
-  return currentRound.pairings
-    .filter((p) => p.black !== null)
-    .every((p) => p.result !== "-");
-}
-
-function isTournamentComplete(section: Section): boolean {
-  return (
-    section.numberRounds > 0 && section.currentRound >= section.numberRounds
-  );
-}
-
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function StatPill({label, value}: {label: string; value: string | number}) {
@@ -113,7 +81,8 @@ export default function TournamentView({tournamentId}: TournamentViewProps) {
   const [deletingSectionId, setDeletingSectionId] = useState<string | null>(
     null,
   );
-  const [pairingSection, setPairingSection] = useState<string | null>(null);
+
+  // ── Data fetching ──────────────────────────────────────────────────────────
 
   async function fetchTournament() {
     try {
@@ -132,6 +101,8 @@ export default function TournamentView({tournamentId}: TournamentViewProps) {
   useEffect(() => {
     fetchTournament();
   }, [tournamentId]);
+
+  // ── Handlers ───────────────────────────────────────────────────────────────
 
   async function handleDeleteSection(sectionId: string) {
     if (
@@ -155,24 +126,7 @@ export default function TournamentView({tournamentId}: TournamentViewProps) {
     }
   }
 
-  async function handlePairNextRound(sectionId: string) {
-    setPairingSection(sectionId);
-    try {
-      const res = await fetch(
-        `/api/tournaments/${tournamentId}/sections/${sectionId}/pairings`,
-        {method: "POST"},
-      );
-      if (!res.ok) throw new Error("Failed to generate pairings");
-      await fetchTournament();
-      router.push(
-        `/dashboard/tournament/${tournamentId}/section/${sectionId}/pairings`,
-      );
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setPairingSection(null);
-    }
-  }
+  // ── Render ─────────────────────────────────────────────────────────────────
 
   if (loading) {
     return (
@@ -218,6 +172,7 @@ export default function TournamentView({tournamentId}: TournamentViewProps) {
           </div>
 
           <button
+            // TODO
             onClick={() =>
               router.push(`/dashboard/tournament/${tournamentId}/edit`)
             }
@@ -244,13 +199,6 @@ export default function TournamentView({tournamentId}: TournamentViewProps) {
                 const configured = isConfigured(section);
                 const playerCount = section.players?.length ?? 0;
                 const isDeleting = deletingSectionId === section._id;
-                const isPairing = pairingSection === section._id;
-                const canPairNext =
-                  configured &&
-                  allResultsEntered(section) &&
-                  !isTournamentComplete(section);
-                const hasStarted = section.currentRound > 0;
-                const isComplete = isTournamentComplete(section);
 
                 return (
                   <div
@@ -258,7 +206,7 @@ export default function TournamentView({tournamentId}: TournamentViewProps) {
                     className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4 transition hover:border-zinc-700">
                     {/* Section header row */}
                     <div className="flex items-start justify-between gap-3">
-                      <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex items-center gap-2">
                         <span className="font-semibold text-zinc-100">
                           {section.name}
                         </span>
@@ -273,13 +221,9 @@ export default function TournamentView({tournamentId}: TournamentViewProps) {
                             Not configured
                           </span>
                         )}
-                        {isComplete && (
-                          <span className="rounded bg-emerald-500/10 px-1.5 py-0.5 text-xs font-medium text-emerald-400">
-                            Complete
-                          </span>
-                        )}
                       </div>
 
+                      {/* Delete */}
                       <button
                         onClick={() => handleDeleteSection(section._id)}
                         disabled={isDeleting}
@@ -302,30 +246,8 @@ export default function TournamentView({tournamentId}: TournamentViewProps) {
                       />
                     </div>
 
-                    {/* Pair next round button */}
-                    {canPairNext && (
-                      <button
-                        onClick={() => handlePairNextRound(section._id)}
-                        disabled={isPairing}
-                        className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-amber-500 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50">
-                        {isPairing ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Generating pairings…
-                          </>
-                        ) : (
-                          <>
-                            <Swords className="h-4 w-4" />
-                            {section.currentRound === 0
-                              ? "Pair Round 1"
-                              : `Pair Round ${section.currentRound + 1}`}
-                          </>
-                        )}
-                      </button>
-                    )}
-
                     {/* Action links */}
-                    <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-zinc-800 pt-3">
+                    <div className="mt-4 flex items-center gap-2 border-t border-zinc-800 pt-3">
                       <button
                         onClick={() =>
                           router.push(
@@ -351,37 +273,6 @@ export default function TournamentView({tournamentId}: TournamentViewProps) {
                         Players
                         <ChevronRight className="h-3 w-3" />
                       </button>
-
-                      {hasStarted && (
-                        <>
-                          <span className="text-zinc-700">·</span>
-                          <button
-                            onClick={() =>
-                              router.push(
-                                `/dashboard/tournament/${tournamentId}/section/${section._id}/pairings`,
-                              )
-                            }
-                            className="flex items-center gap-1 text-xs text-zinc-400 transition hover:text-amber-400">
-                            <Swords className="h-3.5 w-3.5" />
-                            Pairings
-                            <ChevronRight className="h-3 w-3" />
-                          </button>
-
-                          <span className="text-zinc-700">·</span>
-
-                          <button
-                            onClick={() =>
-                              router.push(
-                                `/dashboard/tournament/${tournamentId}/section/${section._id}/standings`,
-                              )
-                            }
-                            className="flex items-center gap-1 text-xs text-zinc-400 transition hover:text-amber-400">
-                            <Medal className="h-3.5 w-3.5" />
-                            Standings
-                            <ChevronRight className="h-3 w-3" />
-                          </button>
-                        </>
-                      )}
                     </div>
                   </div>
                 );
