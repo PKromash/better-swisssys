@@ -6,6 +6,11 @@ interface RouteContext {
   params: Promise<{tournamentId: string; sectionId: string}>;
 }
 
+interface Player {
+  pairingNumber?: number;
+  [key: string]: unknown;
+}
+
 export async function POST(req: Request, context: RouteContext) {
   try {
     await connectToDB();
@@ -16,6 +21,12 @@ export async function POST(req: Request, context: RouteContext) {
     if (!section) {
       return NextResponse.json({error: "Section not found"}, {status: 404});
     }
+
+    const maxPairingNumber = section.players.reduce(
+      (max: number, p: Player) => Math.max(max, p.pairingNumber ?? 0),
+      0,
+    );
+    body.pairingNumber = maxPairingNumber + 1;
 
     section.players.push(body);
     await section.save();

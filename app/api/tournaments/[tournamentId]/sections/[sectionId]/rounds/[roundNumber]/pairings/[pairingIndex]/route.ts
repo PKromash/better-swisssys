@@ -74,41 +74,51 @@ export async function PATCH(
     return NextResponse.json({error: "Pairing not found"}, {status: 404});
   }
 
+  if (pairing.black === null) {
+    return NextResponse.json(
+      {error: "Cannot enter result for a bye pairing"},
+      {status: 400},
+    );
+  }
+
   const previousResult = pairing.result;
   const wasPlayed = previousResult !== "-";
   pairing.result = result;
 
   const {white, black, whiteColor, blackColor} = RESULT_MAP[result];
 
+  const roundIndex = parseInt(roundNumber) - 1;
+
   // Update white player
   const whitePlayer = section.players.find(
     (p: SectionPlayer) => p.pairingNumber === pairing.white,
   );
   if (whitePlayer) {
-    if (wasPlayed) {
-      // Overwrite the last entry for this round
-      const idx = whitePlayer.opponents.length - 1;
-      whitePlayer.opponents[idx] = pairing.black;
-      whitePlayer.results[idx] = white;
-      whitePlayer.colors[idx] = whiteColor;
+    if (!pairing.black) {
+      whitePlayer.results[roundIndex] = pairing.result;
     } else {
-      whitePlayer.opponents.push(pairing.black);
-      whitePlayer.results.push(white);
-      whitePlayer.colors.push(whiteColor);
+      if (wasPlayed) {
+        whitePlayer.opponents[roundIndex] = pairing.black;
+        whitePlayer.results[roundIndex] = white;
+        whitePlayer.colors[roundIndex] = whiteColor;
+      } else {
+        whitePlayer.opponents.push(pairing.black);
+        whitePlayer.results.push(white);
+        whitePlayer.colors.push(whiteColor);
+      }
     }
   }
 
-  // Update black player (null = bye round, no black player to update)
+  // Update black player
   if (pairing.black !== null) {
     const blackPlayer = section.players.find(
       (p: SectionPlayer) => p.pairingNumber === pairing.black,
     );
     if (blackPlayer) {
       if (wasPlayed) {
-        const idx = blackPlayer.opponents.length - 1;
-        blackPlayer.opponents[idx] = pairing.white;
-        blackPlayer.results[idx] = black;
-        blackPlayer.colors[idx] = blackColor;
+        blackPlayer.opponents[roundIndex] = pairing.white;
+        blackPlayer.results[roundIndex] = black;
+        blackPlayer.colors[roundIndex] = blackColor;
       } else {
         blackPlayer.opponents.push(pairing.white);
         blackPlayer.results.push(black);
@@ -116,7 +126,6 @@ export async function PATCH(
       }
     }
   }
-
   section.markModified("players");
   section.markModified("rounds");
   await section.save();

@@ -9,7 +9,8 @@ function cumulativeOpponents(players, candidates){
     for(let i = 0; i < candidates.length; i++){
         let currCumScore = 0
         for(let j = 0; j < candidates[i].opponents.length; j++){
-            currCumScore += players.find(player => player.id === candidates[i].opponents[j]).cumScore
+            const opponent = players.find(player => player.id === candidates[i].opponents[j])
+            if(opponent) currCumScore += opponent.cumScore
         }
         if(currCumScore > maxCumScore){
             maxCumScore = currCumScore

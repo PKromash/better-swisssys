@@ -11,7 +11,8 @@ function solkoff(players, candidates){
         let opponentScore = []
         let currScore = 0
         for(let j = 0; j < opponents.length; j++){
-            opponentScore.push(players.find((player) => player.id === opponents[j]).score)
+            const opponent = players.find((player) => player.id === opponents[j])
+            if(opponent) opponentScore.push(opponent.score)
         }
         opponentScore = opponentScore.sort((a, b) => (a - b))
             for(let j = 0; j < opponentScore.length; j++){
