@@ -14,6 +14,7 @@ import {
   Swords,
   Medal,
   Loader2,
+  Download,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -114,6 +115,7 @@ export default function TournamentView({tournamentId}: TournamentViewProps) {
     null,
   );
   const [pairingSection, setPairingSection] = useState<string | null>(null);
+  const [exportingDBF, setExportingDBF] = useState(false);
 
   async function fetchTournament() {
     try {
@@ -155,6 +157,25 @@ export default function TournamentView({tournamentId}: TournamentViewProps) {
     }
   }
 
+  async function handleExportDBF() {
+    setExportingDBF(true);
+    try {
+      const res = await fetch(`/api/tournaments/${tournamentId}/export/dbf`);
+      if (!res.ok) throw new Error("Export failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${tournament?.metadata.name || "tournament"}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setExportingDBF(false);
+    }
+  }
+
   async function handlePairNextRound(sectionId: string) {
     setPairingSection(sectionId);
     try {
@@ -193,6 +214,8 @@ export default function TournamentView({tournamentId}: TournamentViewProps) {
   }
 
   const {metadata, sections} = tournament;
+  const allSectionsComplete =
+    sections.length > 0 && sections.every(isTournamentComplete);
 
   return (
     <div className="min-h-screen bg-zinc-950 px-4 py-12 text-zinc-100">
@@ -217,14 +240,29 @@ export default function TournamentView({tournamentId}: TournamentViewProps) {
             </div>
           </div>
 
-          <button
-            onClick={() =>
-              router.push(`/dashboard/tournament/${tournamentId}/edit`)
-            }
-            className="flex shrink-0 items-center gap-1.5 rounded-md border border-zinc-700 px-3 py-1.5 text-xs text-zinc-400 transition hover:border-zinc-500 hover:text-zinc-200">
-            <Settings className="h-3.5 w-3.5" />
-            Edit
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            {allSectionsComplete && (
+              <button
+                onClick={handleExportDBF}
+                disabled={exportingDBF}
+                className="flex items-center gap-1.5 rounded-md border border-zinc-700 px-3 py-1.5 text-xs text-zinc-400 transition hover:border-zinc-500 hover:text-zinc-200 disabled:cursor-not-allowed disabled:opacity-50">
+                {exportingDBF ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Download className="h-3.5 w-3.5" />
+                )}
+                Export DBF
+              </button>
+            )}
+            <button
+              onClick={() =>
+                router.push(`/dashboard/tournament/${tournamentId}/edit`)
+              }
+              className="flex items-center gap-1.5 rounded-md border border-zinc-700 px-3 py-1.5 text-xs text-zinc-400 transition hover:border-zinc-500 hover:text-zinc-200">
+              <Settings className="h-3.5 w-3.5" />
+              Edit
+            </button>
+          </div>
         </div>
 
         {/* ── Sections ──────────────────────────────────────────────── */}
