@@ -70,6 +70,9 @@ export default async function StandingsPage({params}: PageProps) {
       rating: dbPlayer.rating,
       score: ep.score,
       USCF_id: dbPlayer.USCF_id,
+      opponents: dbPlayer.opponents,
+      results: dbPlayer.results,
+      colors: dbPlayer.colors,
     };
   });
 
@@ -78,6 +81,7 @@ export default async function StandingsPage({params}: PageProps) {
       tournamentId={tournamentId}
       sectionId={sectionId}
       standings={standings}
+      currentRound={section.currentRound}
     />
   );
 }

@@ -47,18 +47,20 @@ export default async function PairingsPage({params}: PageProps) {
     );
   }
 
-  const currentRound = section.rounds.find(
-    (r) => r.roundNumber === section.currentRound,
-  );
-
-  if (!currentRound) notFound();
-
   const playerMap = Object.fromEntries(
     section.players.map((p) => [p.pairingNumber, p]),
   );
 
+  // Get all rounds that have been played
+  const allRounds = section.rounds
+    .filter((r) => r.roundNumber <= section.currentRound)
+    .map((r) => ({
+      roundNumber: r.roundNumber,
+      pairings: r.pairings,
+    }));
+
   const serialized = JSON.parse(
-    JSON.stringify({section, currentRound, playerMap}),
+    JSON.stringify({section, allRounds, playerMap}),
   );
 
   return (
@@ -66,8 +68,8 @@ export default async function PairingsPage({params}: PageProps) {
       tournamentId={tournamentId}
       sectionId={sectionId}
       sectionName={serialized.section.name}
-      roundNumber={serialized.section.currentRound}
-      pairings={serialized.currentRound.pairings}
+      currentRound={serialized.section.currentRound}
+      allRounds={serialized.allRounds}
       playerMap={serialized.playerMap}
     />
   );

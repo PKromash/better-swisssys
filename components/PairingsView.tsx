@@ -2,7 +2,16 @@
 
 import {useState} from "react";
 import {useRouter} from "next/navigation";
-import {Trophy, Layers, ChevronRight, Check, X} from "lucide-react";
+import {
+  Trophy,
+  Layers,
+  ChevronRight,
+  Check,
+  X,
+  ChevronDown,
+  Trash2,
+  AlertTriangle,
+} from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -19,12 +28,17 @@ interface Pairing {
   result: string;
 }
 
+interface RoundData {
+  roundNumber: number;
+  pairings: Pairing[];
+}
+
 interface PairingsViewProps {
   tournamentId: string;
   sectionId: string;
   sectionName: string;
-  roundNumber: number;
-  pairings: Pairing[];
+  currentRound: number;
+  allRounds: RoundData[];
   playerMap: Record<string, Player>;
 }
 
@@ -53,20 +67,41 @@ export default function PairingsView({
   tournamentId,
   sectionId,
   sectionName,
-  roundNumber,
-  pairings: initialPairings,
+  currentRound,
+  allRounds,
   playerMap,
 }: PairingsViewProps) {
   const router = useRouter();
-  const [pairings, setPairings] = useState(initialPairings);
+  const [selectedRound, setSelectedRound] = useState(currentRound);
+  const [pairings, setPairings] = useState(
+    allRounds.find((r) => r.roundNumber === currentRound)?.pairings || [],
+  );
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
+  const [showRoundSelector, setShowRoundSelector] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const isCurrentRound = selectedRound === currentRound;
+  const canDeleteFollowingRounds = selectedRound < currentRound;
+
+  function handleRoundChange(roundNumber: number) {
+    setSelectedRound(roundNumber);
+    const round = allRounds.find((r) => r.roundNumber === roundNumber);
+    if (round) {
+      setPairings(round.pairings);
+      setOpenIndex(null);
+    }
+    setShowRoundSelector(false);
+  }
 
   async function submitResult(pairingIndex: number, result: string) {
+    if (!isCurrentRound) return; // Can't edit past rounds
+
     setSaving(true);
     try {
       const res = await fetch(
-        `/api/tournaments/${tournamentId}/sections/${sectionId}/rounds/${roundNumber}/pairings/${pairingIndex}`,
+        `/api/tournaments/${tournamentId}/sections/${sectionId}/rounds/${selectedRound}/pairings/${pairingIndex}`,
         {
           method: "PATCH",
           headers: {"Content-Type": "application/json"},
@@ -85,6 +120,29 @@ export default function PairingsView({
     }
   }
 
+  async function deleteFollowingRounds() {
+    setDeleting(true);
+    try {
+      const res = await fetch(
+        `/api/tournaments/${tournamentId}/sections/${sectionId}/rounds/${selectedRound}/delete-following`,
+        {
+          method: "DELETE",
+          headers: {"Content-Type": "application/json"},
+        },
+      );
+      if (!res.ok) throw new Error("Failed to delete rounds");
+
+      // Refresh the page to reload the updated data
+      router.refresh();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete rounds. Please try again.");
+    } finally {
+      setDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  }
+
   const pending = pairings.filter((p) => p.result === "-").length;
   const complete = pairings.length - pending;
 
@@ -98,14 +156,62 @@ export default function PairingsView({
             <span>{sectionName}</span>
           </div>
           <div className="flex items-end justify-between">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-zinc-50">
-                Round {roundNumber} Pairings
-              </h1>
-              <p className="mt-1 text-sm text-zinc-500">
-                {complete} of {pairings.length} results entered
-              </p>
+            <div className="flex items-center gap-3">
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight text-zinc-50">
+                  Round {selectedRound} Pairings
+                </h1>
+                <p className="mt-1 text-sm text-zinc-500">
+                  {complete} of {pairings.length} results entered
+                </p>
+              </div>
+
+              {/* Round selector dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowRoundSelector(!showRoundSelector)}
+                  className="flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs text-zinc-300 transition hover:border-zinc-600 hover:bg-zinc-800">
+                  Change Round
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </button>
+
+                {showRoundSelector && (
+                  <>
+                    {/* Backdrop */}
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setShowRoundSelector(false)}
+                    />
+                    {/* Dropdown */}
+                    <div className="absolute left-0 top-full z-20 mt-1 w-48 rounded-lg border border-zinc-700 bg-zinc-900 py-1 shadow-xl">
+                      {allRounds
+                        .slice()
+                        .reverse()
+                        .map((round) => (
+                          <button
+                            key={round.roundNumber}
+                            onClick={() => handleRoundChange(round.roundNumber)}
+                            className={`w-full px-4 py-2 text-left text-sm transition ${
+                              round.roundNumber === selectedRound
+                                ? "bg-amber-500/10 text-amber-400"
+                                : "text-zinc-300 hover:bg-zinc-800"
+                            }`}>
+                            <div className="flex items-center justify-between">
+                              <span>Round {round.roundNumber}</span>
+                              {round.roundNumber === currentRound && (
+                                <span className="text-xs text-zinc-500">
+                                  (current)
+                                </span>
+                              )}
+                            </div>
+                          </button>
+                        ))}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
+
             <button
               onClick={() =>
                 router.push(
@@ -117,6 +223,27 @@ export default function PairingsView({
               <ChevronRight className="h-3.5 w-3.5" />
             </button>
           </div>
+
+          {/* Warning for past rounds */}
+          {!isCurrentRound && (
+            <div className="mt-3 flex items-center justify-between rounded-lg border border-blue-500/20 bg-blue-500/10 px-3 py-2">
+              <div className="flex items-center gap-2 text-xs text-blue-400">
+                <span>ℹ️</span>
+                <span>
+                  Viewing past round (read-only). Switch to Round {currentRound}{" "}
+                  to edit results.
+                </span>
+              </div>
+              {canDeleteFollowingRounds && (
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="flex items-center gap-1.5 rounded-md border border-red-500/30 bg-red-500/10 px-2.5 py-1 text-xs font-medium text-red-400 transition hover:border-red-500/50 hover:bg-red-500/20">
+                  <Trash2 className="h-3 w-3" />
+                  Delete Following Rounds
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Progress bar */}
           <div className="mt-4 h-1 w-full overflow-hidden rounded-full bg-zinc-800">
@@ -150,8 +277,15 @@ export default function PairingsView({
                 className="rounded-xl border border-zinc-800 bg-zinc-900/60">
                 {/* Main row */}
                 <button
-                  onClick={() => setOpenIndex(isOpen ? null : index)}
-                  className="grid w-full grid-cols-[2rem_1fr_6rem_1fr] items-center gap-2 px-4 py-3 text-left transition hover:bg-zinc-800/50">
+                  onClick={() =>
+                    isCurrentRound && setOpenIndex(isOpen ? null : index)
+                  }
+                  disabled={!isCurrentRound}
+                  className={`grid w-full grid-cols-[2rem_1fr_6rem_1fr] items-center gap-2 px-4 py-3 text-left transition ${
+                    isCurrentRound
+                      ? "hover:bg-zinc-800/50"
+                      : "cursor-default opacity-75"
+                  }`}>
                   {/* Board number */}
                   <span className="text-xs font-bold text-zinc-600">
                     {index + 1}
@@ -164,8 +298,10 @@ export default function PairingsView({
                       <span
                         className="truncate text-sm font-medium text-zinc-100"
                         onClick={(e) => {
-                          submitResult(index, RESULTS[0].value);
-                          e.stopPropagation();
+                          if (isCurrentRound) {
+                            submitResult(index, RESULTS[0].value);
+                            e.stopPropagation();
+                          }
                         }}>
                         {white?.name ?? "—"}
                       </span>
@@ -179,8 +315,10 @@ export default function PairingsView({
                   <div className="flex justify-center">
                     <span
                       onClick={(e) => {
-                        submitResult(index, RESULTS[2].value);
-                        e.stopPropagation();
+                        if (isCurrentRound) {
+                          submitResult(index, RESULTS[2].value);
+                          e.stopPropagation();
+                        }
                       }}
                       className={`text-sm font-semibold tabular-nums ${resultColor(pairing.result)}`}>
                       {pairing.result === "-"
@@ -205,8 +343,10 @@ export default function PairingsView({
                             <span
                               className="truncate text-sm font-medium text-zinc-100"
                               onClick={(e) => {
-                                submitResult(index, RESULTS[1].value);
-                                e.stopPropagation();
+                                if (isCurrentRound) {
+                                  submitResult(index, RESULTS[1].value);
+                                  e.stopPropagation();
+                                }
                               }}>
                               {black?.name ?? "—"}
                             </span>
@@ -215,14 +355,14 @@ export default function PairingsView({
                           <span className="mt-0.5 block pr-3.5 text-xs text-zinc-500">
                             {black?.rating ?? "—"}
                           </span>
-                        </div>{" "}
+                        </div>
                       </>
                     )}
                   </div>
                 </button>
 
                 {/* Result entry dropdown */}
-                {isOpen && !isBye && (
+                {isOpen && !isBye && isCurrentRound && (
                   <div className="border-t border-zinc-800 px-4 py-3">
                     <p className="mb-2 text-xs text-zinc-500">Enter result</p>
                     <div className="flex flex-wrap gap-2">
@@ -244,16 +384,6 @@ export default function PairingsView({
                           {r.label}
                         </button>
                       ))}
-                      {/* {pairing.result !== "-" && (
-                        <button
-                          disabled={saving}
-                          onClick={() => submitResult(index, "-")}
-                          title="Clear result"
-                          className="flex items-center gap-1 rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-600 transition hover:border-red-500/50 hover:text-red-400 disabled:opacity-50">
-                          <X className="h-3 w-3" />
-                          Clear
-                        </button>
-                      )} */}
                     </div>
                   </div>
                 )}
@@ -261,6 +391,87 @@ export default function PairingsView({
             );
           })}
         </div>
+
+        {/* ── Delete Confirmation Modal ──────────────────────────── */}
+        {showDeleteConfirm && (
+          <>
+            {/* Backdrop */}
+            <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" />
+
+            {/* Modal */}
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div className="w-full max-w-md rounded-xl border border-zinc-700 bg-zinc-900 p-6 shadow-2xl">
+                {/* Header */}
+                <div className="mb-4 flex items-start gap-3">
+                  <div className="rounded-lg bg-red-500/10 p-2">
+                    <AlertTriangle className="h-5 w-5 text-red-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-zinc-50">
+                      Delete Following Rounds?
+                    </h3>
+                    <p className="mt-1 text-sm text-zinc-400">
+                      This action cannot be undone.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Details */}
+                <div className="mb-6 rounded-lg border border-zinc-800 bg-zinc-950 p-4">
+                  <p className="mb-2 text-sm text-zinc-300">
+                    You are about to delete:
+                  </p>
+                  <ul className="space-y-1.5 text-sm text-zinc-400">
+                    <li className="flex items-center gap-2">
+                      <span className="text-red-400">•</span>
+                      <span>
+                        Rounds {selectedRound + 1} through {currentRound}
+                      </span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-red-400">•</span>
+                      <span>
+                        {currentRound - selectedRound} round
+                        {currentRound - selectedRound === 1 ? "" : "s"} of
+                        pairings and results
+                      </span>
+                    </li>
+                  </ul>
+                  <div className="mt-3 border-t border-zinc-800 pt-3">
+                    <p className="text-xs text-zinc-500">
+                      The tournament will roll back to the end of Round{" "}
+                      {selectedRound}. You'll need to re-pair and re-enter
+                      results for subsequent rounds.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    disabled={deleting}
+                    className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm font-medium text-zinc-300 transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50">
+                    Cancel
+                  </button>
+                  <button
+                    onClick={deleteFollowingRounds}
+                    disabled={deleting}
+                    className="flex-1 rounded-lg border border-red-500/50 bg-red-500 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50">
+                    {deleting ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                        Deleting...
+                      </span>
+                    ) : (
+                      "Delete Rounds"
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
