@@ -313,7 +313,7 @@ class TDDBF extends DBF {
       record.push(player.USCF_id);
       record.push(player.name);
       record.push(player.state);
-      record.push(typeof player.rating === 'number' ? player.rating : 0);
+      record.push(player.rating !== 'unr' ? player.rating : 0);
       let iter = 0;
       for (let i = 0; i < sections[section - 1].rounds.length; i++) {
         if (
