@@ -10,7 +10,7 @@ function generatePairings(pl){
         const aRating = a.rating === 'unr' ? 0 : Number(a.rating)
         const bRating = b.rating === 'unr' ? 0 : Number(b.rating)
         return b.score - a.score ||
-        b.rating - a.rating ||
+        bRating - aRating ||
         b.id - a.id
     })
     let sections = []

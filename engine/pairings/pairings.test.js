@@ -46,21 +46,19 @@ test('round 1 pairings', () =>{
     // because the first color is randomly selected, there are 2 valid pairings
     if(pairings[0][0].id === 1){
         let correctPairings = []
-        for(let i = 0; i < 2; i++){
-            let tuple = []
-            tuple.push(players[i], players[i+2])
-            correctPairings.push(structuredClone(tuple))
-        }
+        correctPairings.push([players[0], players[2]])
+        correctPairings.push([players[3], players[1]])
+        console.log("expected pairings:", correctPairings)
+        console.log("received pairings:", pairings)
         for(let i = 0; i < pairings.length; i++){
             expect(pairings[i]).toEqual(correctPairings[i])
         }
     }else{
         let correctPairings = []
-        for(let i = 0; i < 2; i++){
-            let tuple = []
-            tuple.push(players[i+2], players[i])
-            correctPairings.push(structuredClone(tuple))
-        }
+        correctPairings.push([players[2], players[0]])
+        correctPairings.push([players[1], players[3]])
+        console.log("expected pairings:", correctPairings)
+        console.log("received pairings:", pairings)
         for(let i = 0; i < pairings.length; i++){
             expect(pairings[i]).toEqual(correctPairings[i])
         }
