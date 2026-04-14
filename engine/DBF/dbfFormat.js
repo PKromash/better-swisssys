@@ -98,7 +98,6 @@ class DBF {
         tempbuf.write(String(r[i]), 0, "utf8");
       }
       buf = Buffer.concat([buf, tempbuf]);
-      console.log(tempbuf);
     }
     return buf;
   }
@@ -314,7 +313,7 @@ class TDDBF extends DBF {
       record.push(player.USCF_id);
       record.push(player.name);
       record.push(player.state);
-      record.push(player.rating.isNumber ? player.rating : 0);
+      record.push(player.rating !== 'unr' ? player.rating : 0);
       let iter = 0;
       for (let i = 0; i < sections[section - 1].rounds.length; i++) {
         if (
