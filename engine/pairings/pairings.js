@@ -212,159 +212,88 @@ function pairSection(section) {
   while (unpairedSection.length > 0) {
     let pairingOccured = false;
     let prePairing = [
-      unpairedSection[0],
-      unpairedSection[unpairedSection.length / 2],
+      structuredClone(unpairedSection[0]),
+      structuredClone(unpairedSection[1]),
     ];
     if (validatePairing(prePairing)) {
       currPairings.push(structuredClone(prePairing));
-      for (const player of prePairing) {
-        unpairedSection = unpairedSection.filter((p) => p.id !== player.id);
-      }
-    } else {
-      //disparity will be a list of the form [initialPlayer, [swappedPlayer, ratingDisparity]]
-      let {p1DisparityList: p1Disparity, p2DisparityList: p2Disparity} =
-        calculateDisparity(
-          unpairedSection[0],
-          unpairedSection[unpairedSection.length / 2],
-          section,
-        );
-      let disparity = [];
-      p1Disparity.forEach((p) => disparity.push([unpairedSection[0], p]));
-      p2Disparity.forEach((p) =>
-        disparity.push([unpairedSection[unpairedSection.length / 2], p]),
+      unpairedSection = unpairedSection.filter(
+        (p) => prePairing[0].id !== p.id && prePairing[1].id !== p.id,
       );
-      disparity.sort((a, b) => a[1][1] - b[1][1]);
-      for (const swap of disparity) {
-        let newPairing = [];
-        const index = prePairing.findIndex((p) => p.id === swap[0].id);
-        if (index !== -1) {
-          newPairing = structuredClone(prePairing);
-          newPairing[index] = swap[1][0];
-          if (validatePairing(newPairing)) {
-            const outerIndex = currPairings.findIndex((pairing) =>
-              pairing.some((p) => p.id === swap[1][0].id),
-            );
-            //if swapped player is already paired, verify the new pairing is valid
-            if (outerIndex !== -1) {
-              const innerIndex = currPairings[outerIndex].findIndex(
-                (p) => p.id === swap[1][0].id,
-              );
-              let existingPairing = structuredClone(currPairings[outerIndex]);
-              existingPairing[innerIndex] = swap[1][0];
-              if (validatePairing(existingPairing)) {
-                currPairings[outerIndex] = structuredClone(existingPairing);
-                currPairings.push(structuredClone(newPairing));
-                unpairedSection = unpairedSection.filter(
-                  (p) =>
-                    p.id !== unpairedSection[0].id &&
-                    p.id !== unpairedSection[unpairedSection.length / 2].id,
-                );
-                pairingOccured = true;
-                break;
-              } else {
-                continue;
-              }
-            } else {
-              currPairings.push(newPairing);
-              newPairing.forEach(
-                (p) =>
-                  (unpairedSection = unpairedSection.filter(
-                    (player) => player.id !== p.id,
-                  )),
-              );
-              pairingOccured = true;
-              break;
-            }
-          } else {
-            continue;
-          }
-        } else {
-          console.log(
-            "error: player was expected in pairing, but was not found",
-          );
-        }
-      }
-      if (!pairingOccured) {
-        let unpairable = structuredClone([
-          unpairedSection[0],
-          unpairedSection[unpairedSection.length / 2],
-        ]);
-        unpairable.forEach((p) => unpairablePlayers.push(structuredClone(p)));
-        unpairable.forEach(
-          (p) =>
-            (unpairedSection = unpairedSection.filter(
-              (player) => p.id !== player.id,
-            )),
+      continue;
+    }
+    //tries to find the first pairable player in the list with the first player
+    for (let j = 1; j < unpairedSection.length; j++) {
+      //tries to pair p1 and pj
+      let p1 = structuredClone(unpairedSection[0]);
+      let pj = structuredClone(unpairedSection[j]);
+      let testPairing = [p1, pj];
+      //if the pairing is valid, pair them and remove them from the section
+      if (validatePairing(testPairing)) {
+        currPairings.push(structuredClone(testPairing));
+        unpairedSection = unpairedSection.filter(
+          (p) => testPairing[0].id !== p.id && testPairing[1].id !== p.id,
         );
+        pairingOccured = true;
+        break;
       }
+    }
+    if (!pairingOccured) {
+      unpairablePlayers.push(structuredClone(unpairedSection[0]));
+      unpairedSection = unpairedSection.filter(
+        (p) => p.id !== unpairedSection[0].id,
+      );
     }
   }
   return {currPairings, unpairablePlayers};
 }
-//attempts to repair to optimize color pairings, then selects the color for each player
-//if isFloater is set to true, function will skip repairing
-function setColors(pairs, noPrioColor, isFloater = false) {
-  let pairings = [...pairs];
-  let section = [];
-  pairings.forEach((p) => p.forEach((player) => section.push(player)));
-  let numExpectedWhite = 0;
-  let numExpectedBlack = 0;
-  if (!isFloater) {
-    for (let player of section) {
-      if (player.colors.filter((c) => c !== "X").length === 0) {
-        continue;
-      }
-      if (colorBalance(player) !== 0) {
-        colorBalance(player) > 0
-          ? (numExpectedWhite += 1)
-          : (numExpectedBlack += 1);
-      } else {
-        player.colors.filter((c) => c !== "X").at(-1) === "B"
-          ? (numExpectedWhite += 1)
-          : (numExpectedBlack += 1);
-      }
-    }
-    for (let i = 0; i < pairings.length; i++) {
+function setColors(pairings, noPrioColor, skipSwap) {
+  if (!skipSwap) {
+    for (let i = 0; i < pairings.length - 1; i++) {
+      let pairingsFlat = pairings.flat();
       if (
-        Math.sign(colorBalance(pairings[i][0])) *
-          Math.sign(colorBalance(pairings[i][1])) ===
-          -1 ||
-        (Math.sign(colorBalance(pairings[i][0])) === 0 &&
-          Math.sign(colorBalance(pairings[i][1])) === 0 &&
-          pairings[i][0].colors.filter((c) => c !== "X") !==
-            pairings[i][1].colors.filter((c) => c !== "X"))
-      ) {
-        continue;
-      }
-      //this statement applies the lookahead method for USCF color swapping
-      //if the number of players due white and the number of players due black are less
-      //than or equal to half of the total number of players, any swap that improves the pairing is done
-      //if more than half of the players are due white or black, only pairings where both players want the
-      //same due color, and the color is opposite the most common due color are considered for swaps
-      if (
-        (numExpectedWhite <= pairings.length &&
-          numExpectedBlack <= pairings.length) ||
-        (numExpectedWhite > pairings.length &&
-          Math.sign(colorBalance(pairings[i][0])) === -1 &&
-          Math.sign(colorBalance(pairings[i][1])) === -1) ||
-        (numExpectedBlack > pairings.length &&
-          Math.sign(colorBalance(pairings[i][0])) === 1 &&
+        balanceType(pairings[i]) > 0 &&
+        (Math.sign(colorBalance(pairings[i][0])) === 1 ||
           Math.sign(colorBalance(pairings[i][1])) === 1)
       ) {
+        const swap = [
+          {player: pairings[i][0], disparity: []},
+          {player: pairings[i][1], disparity: []},
+        ];
         let {p1DisparityList, p2DisparityList} = calculateDisparity(
           pairings[i][0],
           pairings[i][1],
-          section,
+          pairingsFlat,
         );
-        let disparity = [];
-        p1DisparityList.forEach((p) => disparity.push([pairings[i][0], p]));
-        p2DisparityList.forEach((p) => disparity.push([pairings[i][1], p]));
+        let swappedArray = [];
+        for (let p = 0; p < p1DisparityList.length; p++) {
+          let testPairing = structuredClone(pairings[i]);
+          testPairing[0] = p1DisparityList[p][0];
+          if (balanceType(testPairing) < balanceType(pairings[i])) {
+            swappedArray.push([
+              structuredClone(pairings[i][0]),
+              structuredClone(p1DisparityList[p]),
+            ]);
+          }
+        }
+        swap[0].disparity = swappedArray;
+        swappedArray = [];
+        for (let p = 0; p < p2DisparityList.length; p++) {
+          let testPairing = structuredClone(pairings[i]);
+          testPairing[1] = p2DisparityList[p][0];
+          if (balanceType(testPairing) < balanceType(pairings[i])) {
+            swappedArray.push([
+              structuredClone(pairings[i][1]),
+              structuredClone(p2DisparityList[p]),
+            ]);
+          }
+        }
+        swap[1].disparity = swappedArray;
+        let disparity = [...swap[0].disparity, ...swap[1].disparity];
+        //if both players in a pairing have a preference for black, which is indicated by:
+        //both have a positive cb OR both have a negative cb
+        //then it is acceptable to prioritize swapping to minimize disparities over a 200 rating cap
         if (
-          Math.sign(colorBalance(pairings[i][0])) === 0 ||
-          Math.sign(colorBalance(pairings[i][1])) === 0
-        ) {
-          disparity = disparity.filter((d) => d[1][1] <= 80);
-        } else if (
           (Math.sign(colorBalance(pairings[i][0])) === 1 &&
             Math.sign(colorBalance(pairings[i][1])) === 1) ||
           (Math.sign(colorBalance(pairings[i][1])) === -1 &&
@@ -523,6 +452,12 @@ function calculateDisparity(player1, player2, section) {
 function validatePairing(pairing) {
   let p1 = pairing[0];
   let p2 = pairing[1];
+
+  // Handle bye pairings (where one player is null)
+  if (!p1 || !p2) {
+    return true; // Bye pairings are always valid
+  }
+
   if (
     p2.opponents.some((o) => o === p1.id) ||
     p1.opponents.some((o) => o === p2.id)
